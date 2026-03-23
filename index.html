@@ -697,6 +697,7 @@ function loadData(raw){
   buildDecadeChips();
   renderStartPage();
   renderFavList();
+  if($('page-challenges').classList.contains('active'))renderChallenges();
 }
 async function tryFetch(){
   try{const res=await fetch('data.json');if(!res.ok)throw new Error();loadData(await res.json());}
@@ -1485,8 +1486,11 @@ function getChallenges(){
 }
 
 function renderChallenges(){
-  if(!streets.length)return;
   const grid=$('challengesGrid');
+  if(!streets.length){
+    grid.innerHTML='<div class="notice" style="margin:20px"><strong>Daten werden geladen…</strong><p>Bitte warte einen Moment.</p></div>';
+    return;
+  }
   grid.innerHTML='';
   const challenges=getChallenges();
   const completed=challenges.filter(c=>calcChallenge(c).done).length;
