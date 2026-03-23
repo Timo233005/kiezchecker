@@ -314,6 +314,28 @@ html,body{height:100%;font-family:var(--sans);background:var(--bg);color:var(--t
 .top5-rank{font-size:11px;font-weight:700;color:var(--muted);width:14px;flex-shrink:0;text-align:center}
 .top5-name{font-size:13px;font-weight:600;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left}
 .top5-val{font-size:12px;color:var(--accent);font-weight:600;flex-shrink:0}
+/* ── Challenges ── */
+.challenges-grid{display:flex;flex-direction:column;gap:12px;padding:16px 20px 0}
+.challenge-card{background:var(--card);border-radius:14px;box-shadow:var(--shadow);overflow:hidden;transition:all var(--tr);cursor:pointer;border:1.5px solid var(--line)}
+.challenge-card:hover{box-shadow:var(--shadow-lg)}
+.challenge-card.done{border-color:#22c55e;background:rgba(34,197,94,.04)}
+.challenge-header{display:flex;align-items:center;gap:12px;padding:14px 16px 10px}
+.challenge-emoji{font-size:24px;flex-shrink:0}
+.challenge-info{flex:1;min-width:0}
+.challenge-title{font-weight:600;font-size:14px;line-height:1.3;margin-bottom:2px}
+.challenge-desc{font-size:12px;color:var(--muted);font-weight:300;line-height:1.4}
+.challenge-badge{font-size:11px;font-weight:600;padding:3px 10px;border-radius:999px;flex-shrink:0;white-space:nowrap}
+.challenge-badge.easy{background:#dcfce7;color:#166534}
+.challenge-badge.medium{background:#fef3c7;color:#92400e}
+.challenge-badge.hard{background:#fee2e2;color:#991b1b}
+.challenge-progress{padding:0 16px 14px}
+.challenge-bar-wrap{display:flex;align-items:center;gap:10px}
+.challenge-bar-track{flex:1;height:6px;background:var(--card2);border-radius:999px;overflow:hidden}
+.challenge-bar-fill{height:100%;border-radius:999px;background:var(--accent);transition:width .6s cubic-bezier(.4,0,.2,1)}
+.challenge-bar-fill.done{background:#22c55e}
+.challenge-count{font-size:12px;font-weight:600;color:var(--text);white-space:nowrap}
+.challenge-done-badge{display:flex;align-items:center;gap:4px;font-size:12px;font-weight:600;color:#166534;padding:2px 0 0}
+.challenge-view-btn{font-size:12px;color:var(--accent);font-weight:600;margin-top:4px;background:none;border:none;cursor:pointer;padding:0;font-family:var(--sans)}
 .sheet-map{height:190px;width:100%;background:var(--card2);flex-shrink:0;position:relative;overflow:hidden}
 .sheet-map-loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--muted);gap:8px;z-index:5;background:var(--card2);pointer-events:none}
 .sheet-map-spinner{width:16px;height:16px;border:2px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:kc-spin .7s linear infinite;flex-shrink:0}
@@ -565,6 +587,25 @@ html,body{height:100%;font-family:var(--sans);background:var(--bg);color:var(--t
   <div class="stats-grid" id="statsGrid"></div>
 </div>
 
+<!-- PAGE: CHALLENGES -->
+<div class="page" id="page-challenges">
+  <div class="header">
+    <div class="logo-wrap">
+      <svg class="logo-svg" viewBox="0 0 52 52" fill="none">
+        <rect width="52" height="52" rx="14" fill="#c0392b"/>
+        <path d="M26 10C20.477 10 16 14.477 16 20c0 8 10 22 10 22s10-14 10-22c0-5.523-4.477-10-10-10z" fill="white" opacity="0.95"/>
+        <circle cx="26" cy="20" r="4.5" fill="#c0392b"/>
+        <line x1="8" y1="44" x2="44" y2="44" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+        <line x1="8" y1="39" x2="16" y2="39" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.35"/>
+        <line x1="36" y1="39" x2="44" y2="39" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.35"/>
+      </svg>
+      <div class="brand"><span class="brand-kicker">Ziele & Aufgaben</span><h1 class="brand-title">Challenges</h1><p class="brand-sub" id="challengeSubText">Lade Daten…</p></div>
+    </div>
+    <div class="header-divider"></div>
+  </div>
+  <div id="challengesGrid" class="challenges-grid"></div>
+</div>
+
 </div><!-- .app -->
 
 <div id="overlay" class="overlay" aria-hidden="true"></div>
@@ -618,7 +659,8 @@ html,body{height:100%;font-family:var(--sans);background:var(--bg);color:var(--t
     <button class="nav-btn active" data-nav="suche">Suche</button>
     <button class="nav-btn" data-nav="bezirke">Bezirke</button>
     <button class="nav-btn" data-nav="favoriten">★ Favs</button>
-    <button class="nav-btn" data-nav="stats">Statistiken</button>
+    <button class="nav-btn" data-nav="challenges">🏆</button>
+    <button class="nav-btn" data-nav="stats">Stats</button>
   </div>
 </nav>
 
@@ -1261,6 +1303,7 @@ document.querySelectorAll('.nav-btn').forEach(btn=>{
     $('alphaNav').classList.remove('visible');
     if(nav==='favoriten')renderFavList();
     if(nav==='stats')renderStats();
+    if(nav==='challenges')renderChallenges();
     if(nav==='bezirke'&&!activeBezirk){$('bezirkTileView').style.display='block';$('bezirkListView').style.display='none';}
   });
 });
@@ -1312,6 +1355,7 @@ $('exploredBtn').addEventListener('click',()=>{
   renderAllLists();
   // refresh stats if visible
   if($('page-stats').classList.contains('active'))renderStats();
+  if($('page-challenges').classList.contains('active'))renderChallenges();
 });
 function closeDetail(){
   sheet.classList.remove('open');sheet.setAttribute('aria-hidden','true');
@@ -1379,6 +1423,133 @@ async function loadMap(item){
     $('sheetMapLoading').style.display='none';
     $('sheetMapError').classList.add('show');
   }
+}
+
+/* ── Challenges ── */
+function getChallenges(){
+  // Each challenge: id, emoji, title, desc, difficulty, filter fn → matching streets
+  return [
+    // Bezirk-Challenges
+    {id:'c01',emoji:'🗺️',title:'Kreuzberg komplett',desc:'Erkunde alle Straßen in Kreuzberg',diff:'hard',
+     fn:()=>streets.filter(s=>s.bezirk==='Berlin-Kreuzberg')},
+    {id:'c02',emoji:'🏙️',title:'Mitte entdecken',desc:'Erkunde alle Straßen in Mitte',diff:'hard',
+     fn:()=>streets.filter(s=>s.bezirk==='Berlin-Mitte')},
+    {id:'c03',emoji:'🌳',title:'Prenzlauer Berg',desc:'Erkunde alle Straßen in Prenzlauer Berg',diff:'hard',
+     fn:()=>streets.filter(s=>s.bezirk==='Berlin-Prenzlauer Berg')},
+    {id:'c04',emoji:'🎭',title:'Friedrichshain erkunden',desc:'Erkunde alle Straßen in Friedrichshain',diff:'hard',
+     fn:()=>streets.filter(s=>s.bezirk==='Berlin-Friedrichshain')},
+    {id:'c05',emoji:'🏰',title:'Alt Treptow Starter',desc:'Erkunde alle 34 Straßen in Alt Treptow',diff:'easy',
+     fn:()=>streets.filter(s=>s.bezirk==='Berlin-Alt Treptow')},
+    {id:'c06',emoji:'⚙️',title:'Siemensstadt meistern',desc:'Erkunde alle Straßen in Siemensstadt',diff:'easy',
+     fn:()=>streets.filter(s=>s.bezirk==='Berlin-Siemensstadt')},
+    // Typ-Challenges
+    {id:'c07',emoji:'⛲',title:'Platz-Sammler: Kreuzberg',desc:'Erkunde alle Plätze in Kreuzberg',diff:'easy',
+     fn:()=>streets.filter(s=>s.bezirk==='Berlin-Kreuzberg'&&getType(s.name)==='Platz')},
+    {id:'c08',emoji:'⛲',title:'Platz-Sammler: Mitte',desc:'Erkunde alle Plätze in Mitte',diff:'medium',
+     fn:()=>streets.filter(s=>s.bezirk==='Berlin-Mitte'&&getType(s.name)==='Platz')},
+    {id:'c09',emoji:'🌲',title:'Alle Wege in Lichterfelde',desc:'Erkunde alle Wege & Pfade in Lichterfelde',diff:'medium',
+     fn:()=>streets.filter(s=>s.bezirk==='Berlin-Lichterfelde'&&getType(s.name)==='Weg')},
+    {id:'c10',emoji:'🛤️',title:'Alleen-Sammler',desc:'Erkunde alle 47 Alleen in der Datenbank',diff:'medium',
+     fn:()=>streets.filter(s=>s.name.toLowerCase().includes('allee'))},
+    // Historische Challenges
+    {id:'c11',emoji:'📜',title:'Vor 1800 benannt',desc:'Erkunde 10 Straßen die vor 1800 benannt wurden',diff:'medium',
+     fn:()=>streets.filter(s=>{const y=getDatumYear(s.datum);return y&&y<1800;}),target:10},
+    {id:'c12',emoji:'🏛️',title:'Kaiserreich-Straßen',desc:'Erkunde 20 Straßen aus dem Kaiserreich (1871–1918)',diff:'medium',
+     fn:()=>streets.filter(s=>{const y=getDatumYear(s.datum);return y&&y>=1871&&y<=1918;}),target:20},
+    {id:'c13',emoji:'🕰️',title:'Ältester Kiez',desc:'Erkunde 15 Straßen die vor 1850 benannt wurden',diff:'medium',
+     fn:()=>streets.filter(s=>{const y=getDatumYear(s.datum);return y&&y<1850;}),target:15},
+    {id:'c14',emoji:'✨',title:'Neue Straßen',desc:'Erkunde 10 Straßen die nach 2010 benannt wurden',diff:'easy',
+     fn:()=>streets.filter(s=>{const y=getDatumYear(s.datum);return y&&y>2010;}),target:10},
+    // Personen-Challenges
+    {id:'c15',emoji:'👤',title:'Namenspaten',desc:'Erkunde 25 nach Personen benannte Straßen',diff:'medium',
+     fn:()=>streets.filter(s=>/\d{4}[–—\-]\d{4}/.test(s.herkunft||'')),target:25},
+    {id:'c16',emoji:'👩',title:'Frauen in der Geschichte',desc:'Erkunde 10 nach Frauen benannte Straßen',diff:'easy',
+     fn:()=>streets.filter(s=>/\b(Maria|Anna|Clara|Louise|Sophie|Elisabeth|Henriette|Rosa|Emma|Käthe|Helene|Paula|Martha|Luise|Inge)\b/.test(s.herkunft||'')),target:10},
+    // Längen-Challenges
+    {id:'c17',emoji:'📏',title:'Lange Wege',desc:'Erkunde 10 Straßen die länger als 1000m sind',diff:'medium',
+     fn:()=>streets.filter(s=>{try{return parseFloat(s.laenge)>=1000;}catch{return false;}}),target:10},
+    {id:'c18',emoji:'📌',title:'Kleine Gassen',desc:'Erkunde 5 Straßen die kürzer als 100m sind',diff:'easy',
+     fn:()=>streets.filter(s=>{try{const l=parseFloat(s.laenge);return l>0&&l<100;}catch{return false;}}),target:5},
+    // Quer-Bezirk
+    {id:'c19',emoji:'🗺️',title:'Berliner Weltreisender',desc:'Erkunde mindestens eine Straße in jedem Bezirk',diff:'hard',
+     fn:()=>streets,customCheck:()=>{
+       const exploredBezirke=new Set(streets.filter(s=>explored.has(s.name)).map(s=>s.bezirk).filter(Boolean));
+       return{done:bezirke.every(b=>exploredBezirke.has(b)),current:exploredBezirke.size,total:bezirke.length};
+     }},
+    {id:'c20',emoji:'🏆',title:'100 Straßen',desc:'Erkunde insgesamt 100 Straßen in ganz Berlin',diff:'hard',
+     fn:()=>streets,target:100,customCheck:()=>{
+       const c=streets.filter(s=>explored.has(s.name)).length;
+       return{done:c>=100,current:Math.min(c,100),total:100};
+     }},
+  ];
+}
+
+function renderChallenges(){
+  if(!streets.length)return;
+  const grid=$('challengesGrid');
+  grid.innerHTML='';
+  const challenges=getChallenges();
+  const completed=challenges.filter(c=>calcChallenge(c).done).length;
+  $('challengeSubText').textContent=completed+' / '+challenges.length+' abgeschlossen';
+
+  challenges.forEach(ch=>{
+    const {done,current,total}=calcChallenge(ch);
+    const pct=total>0?Math.min(100,Math.round(current/total*100)):0;
+    const card=document.createElement('div');
+    card.className='challenge-card'+(done?' done':'');
+
+    let progressHtml='';
+    if(done){
+      progressHtml='<div class="challenge-done-badge"><svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="#22c55e" stroke-width="2"><path d="M2 7l4 4 6-6"/></svg> Abgeschlossen!</div>';
+    } else {
+      progressHtml='<div class="challenge-bar-wrap">'
+        +'<div class="challenge-bar-track"><div class="challenge-bar-fill" style="width:'+pct+'%"></div></div>'
+        +'<span class="challenge-count">'+current+' / '+total+'</span>'
+        +'</div>';
+      if(current>0){
+        progressHtml+='<button class="challenge-view-btn" data-chid="'+ch.id+'">Noch '+( total-current)+' fehlen → Liste anzeigen</button>';
+      } else {
+        progressHtml+='<button class="challenge-view-btn" data-chid="'+ch.id+'">Straßen anzeigen →</button>';
+      }
+    }
+
+    card.innerHTML='<div class="challenge-header">'
+      +'<span class="challenge-emoji">'+ch.emoji+'</span>'
+      +'<div class="challenge-info">'
+      +'<div class="challenge-title">'+escHtml(ch.title)+'</div>'
+      +'<div class="challenge-desc">'+escHtml(ch.desc)+'</div>'
+      +'</div>'
+      +'<span class="challenge-badge '+ch.diff+'">'+(ch.diff==='easy'?'Leicht':ch.diff==='medium'?'Mittel':'Schwer')+'</span>'
+      +'</div>'
+      +'<div class="challenge-progress">'+progressHtml+'</div>';
+
+    grid.appendChild(card);
+  });
+
+  // View button → open list
+  grid.querySelectorAll('.challenge-view-btn').forEach(btn=>{
+    btn.addEventListener('click',e=>{
+      e.stopPropagation();
+      const ch=challenges.find(c=>c.id===btn.dataset.chid);
+      if(!ch)return;
+      const list=ch.fn().filter(s=>!explored.has(s.name));
+      document.querySelector('[data-nav="suche"]').click();
+      currentQuery='';
+      $('searchInput').value='';
+      $('searchUI').classList.remove('hidden');
+      $('countText').innerHTML='<strong>'+list.length+'</strong> verbleibende Straßen für „'+escHtml(ch.title)+'"';
+      renderList($('listContainer'),list,'',false);
+      $('searchUI').scrollIntoView({behavior:'smooth',block:'start'});
+    });
+  });
+}
+
+function calcChallenge(ch){
+  if(ch.customCheck) return ch.customCheck();
+  const all=ch.fn();
+  const target=ch.target||all.length;
+  const current=all.filter(s=>explored.has(s.name)).length;
+  return{done:current>=target,current:Math.min(current,target),total:target};
 }
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
