@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
 :root{
   --bg:#faf7f0;--card:#ffffff;--card2:#f3ede0;
@@ -311,10 +312,77 @@ html,body{height:100%;font-family:var(--sans);background:var(--bg);color:var(--t
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 @keyframes tileIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 @keyframes kc-spin{to{transform:rotate(360deg)}}
+
+/* ── Auth Screen ── */
+.auth-screen{position:fixed;inset:0;background:var(--accent);z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px}
+.auth-screen.hidden{display:none}
+.auth-logo{font-family:var(--serif);font-size:42px;color:#fff;margin-bottom:6px;letter-spacing:-.01em}
+.auth-sub{font-size:13px;color:rgba(255,255,255,.6);margin-bottom:40px;letter-spacing:.04em;text-transform:uppercase}
+.auth-card{background:#fff;border-radius:18px;padding:28px 24px;width:100%;max-width:360px;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.auth-title{font-family:var(--serif);font-size:22px;color:var(--text);margin-bottom:4px}
+.auth-desc{font-size:13px;color:var(--muted);margin-bottom:24px}
+.auth-field{margin-bottom:14px}
+.auth-label{font-size:12px;font-weight:600;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px;display:block}
+.auth-input{width:100%;padding:12px 14px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);font-size:15px;font-family:var(--sans);color:var(--text);outline:none;transition:border-color var(--tr)}
+.auth-input:focus{border-color:var(--accent)}
+.auth-btn{width:100%;padding:14px;border-radius:10px;background:var(--accent);color:#fff;border:none;cursor:pointer;font-size:15px;font-weight:600;font-family:var(--sans);margin-top:8px;transition:opacity var(--tr)}
+.auth-btn:hover{opacity:.88}
+.auth-btn:disabled{opacity:.5;cursor:not-allowed}
+.auth-toggle{text-align:center;margin-top:16px;font-size:13px;color:var(--muted)}
+.auth-toggle button{background:none;border:none;color:var(--accent);font-weight:600;cursor:pointer;font-family:var(--sans);font-size:13px}
+.auth-error{background:#fee2e2;color:#991b1b;border-radius:8px;padding:10px 12px;font-size:13px;margin-bottom:14px;display:none}
+.auth-error.show{display:block}
+.auth-success{background:#e6f0e8;color:#2d4a3e;border-radius:8px;padding:10px 12px;font-size:13px;margin-bottom:14px;display:none}
+.auth-success.show{display:block}
+
+/* ── User-Bar (oben in der App) ── */
+.user-bar{background:var(--accent);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:30}
+.user-bar-name{font-size:12px;color:rgba(255,255,255,.7);font-weight:500}
+.user-bar-name span{color:#fff;font-weight:600}
+.user-bar-logout{background:rgba(255,255,255,.15);border:none;border-radius:999px;padding:5px 12px;font-size:11px;font-weight:600;color:#fff;cursor:pointer;font-family:var(--sans);transition:background var(--tr)}
+.user-bar-logout:hover{background:rgba(255,255,255,.25)}
+.sync-indicator{font-size:10px;color:rgba(255,255,255,.5);display:flex;align-items:center;gap:4px}
+.sync-dot{width:6px;height:6px;border-radius:50%;background:#22c55e}
+.sync-dot.syncing{background:#f59e0b;animation:kc-spin .7s linear infinite}
 </style>
 </head>
 <body>
+
+<!-- Auth Screen -->
+<div class="auth-screen" id="authScreen">
+  <div class="auth-logo">KiezStreets</div>
+  <div class="auth-sub">Berliner Straßenführer</div>
+  <div class="auth-card">
+    <div class="auth-title" id="authTitle">Willkommen zurück</div>
+    <div class="auth-desc" id="authDesc">Melde dich an um deinen Fortschritt zu sehen</div>
+    <div class="auth-error" id="authError"></div>
+    <div class="auth-success" id="authSuccess"></div>
+    <div class="auth-field">
+      <label class="auth-label">E-Mail</label>
+      <input class="auth-input" type="email" id="authEmail" placeholder="deine@email.de" autocomplete="email"/>
+    </div>
+    <div class="auth-field">
+      <label class="auth-label">Passwort</label>
+      <input class="auth-input" type="password" id="authPassword" placeholder="••••••••" autocomplete="current-password"/>
+    </div>
+    <button class="auth-btn" id="authSubmit">Anmelden</button>
+    <div class="auth-toggle">
+      <span id="authToggleText">Noch kein Konto?</span>
+      <button id="authToggleBtn">Registrieren</button>
+    </div>
+  </div>
+</div>
+
 <div class="app">
+
+<!-- User Bar -->
+<div class="user-bar" id="userBar" style="display:none">
+  <div class="user-bar-name">👋 <span id="userEmail"></span></div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <div class="sync-indicator"><div class="sync-dot" id="syncDot"></div><span id="syncText">Gespeichert</span></div>
+    <button class="user-bar-logout" id="logoutBtn">Abmelden</button>
+  </div>
+</div>
 
 <!-- PAGE 1: SUCHE -->
 <div class="page active" id="page-suche">
@@ -517,6 +585,7 @@ html,body{height:100%;font-family:var(--sans);background:var(--bg);color:var(--t
   </div>
 </div>
 
+</div>
 </div><!-- .app -->
 
 <div id="overlay" class="overlay" aria-hidden="true"></div>
@@ -596,7 +665,14 @@ html,body{height:100%;font-family:var(--sans);background:var(--bg);color:var(--t
 </nav>
 
 <script>
-const CFG={AC_LIMIT:5,DEBOUNCE_MS:180,STORAGE_KEY:'strassenatlas_favs_v2',HISTORY_KEY:'kiez_search_history',RECENT_KEY:'kiez_recent_views',EXPLORED_KEY:'kiez_explored',STREAK_KEY:'kiez_streak'};
+/* ── Supabase ── */
+const SUPA_URL='https://wgplstxevrcevjehnjde.supabase.co';
+const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndncGxzdHhldnJjZXZqZWhuamRlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzNzU0ODQsImV4cCI6MjA4OTk1MTQ4NH0.x7rfriBigU-f46HtA7IgYolXAPem1rUYCLxkUfIIBuw';
+const supa=supabase.createClient(SUPA_URL,SUPA_KEY);
+let currentUser=null;
+let syncTimer=null;
+
+const CFG={AC_LIMIT:5,DEBOUNCE_MS:180,STORAGE_KEY:'ks_favs',HISTORY_KEY:'ks_history',RECENT_KEY:'ks_recent',EXPLORED_KEY:'ks_explored',STREAK_KEY:'ks_streak'};
 
 let streets=[],bezirke=[];
 let favorites=new Set(JSON.parse(localStorage.getItem(CFG.STORAGE_KEY)||'[]'));
@@ -611,6 +687,135 @@ let currentFactIndex=0,factItems=[];
 const $=id=>document.getElementById(id);
 const searchInput=$('searchInput'),autocomplete=$('autocomplete');
 const sheet=$('sheet'),overlay=$('overlay');
+
+/* ── Auth UI ── */
+let authMode='login';
+$('authToggleBtn').addEventListener('click',()=>{
+  authMode=authMode==='login'?'register':'login';
+  $('authTitle').textContent=authMode==='login'?'Willkommen zurück':'Konto erstellen';
+  $('authDesc').textContent=authMode==='login'?'Melde dich an um deinen Fortschritt zu sehen':'Erstelle ein Konto um loszulegen';
+  $('authSubmit').textContent=authMode==='login'?'Anmelden':'Registrieren';
+  $('authToggleText').textContent=authMode==='login'?'Noch kein Konto?':'Bereits registriert?';
+  $('authToggleBtn').textContent=authMode==='login'?'Registrieren':'Anmelden';
+  $('authError').classList.remove('show');
+  $('authSuccess').classList.remove('show');
+});
+
+$('authSubmit').addEventListener('click',async()=>{
+  const email=$('authEmail').value.trim();
+  const password=$('authPassword').value;
+  if(!email||!password){showAuthError('Bitte alle Felder ausfüllen');return;}
+  $('authSubmit').disabled=true;$('authSubmit').textContent='Bitte warten…';
+  $('authError').classList.remove('show');
+  try{
+    let result;
+    if(authMode==='login'){
+      result=await supa.auth.signInWithPassword({email,password});
+    } else {
+      result=await supa.auth.signUp({email,password});
+      if(!result.error&&result.data.user&&!result.data.session){
+        showAuthSuccess('Bestätigungsmail gesendet! Bitte E-Mail bestätigen.');
+        $('authSubmit').disabled=false;$('authSubmit').textContent='Registrieren';
+        return;
+      }
+    }
+    if(result.error)throw result.error;
+  } catch(e){
+    showAuthError(e.message==='Invalid login credentials'?'E-Mail oder Passwort falsch':e.message);
+    $('authSubmit').disabled=false;
+    $('authSubmit').textContent=authMode==='login'?'Anmelden':'Registrieren';
+  }
+});
+
+$('authEmail').addEventListener('keydown',e=>{if(e.key==='Enter')$('authPassword').focus();});
+$('authPassword').addEventListener('keydown',e=>{if(e.key==='Enter')$('authSubmit').click();});
+
+function showAuthError(msg){$('authError').textContent=msg;$('authError').classList.add('show');}
+function showAuthSuccess(msg){$('authSuccess').textContent=msg;$('authSuccess').classList.add('show');}
+
+$('logoutBtn').addEventListener('click',async()=>{
+  await supa.auth.signOut();
+  currentUser=null;
+  favorites=new Set();explored=new Set();meinBezirk='';
+  $('userBar').style.display='none';
+  $('authScreen').classList.remove('hidden');
+  $('authEmail').value='';$('authPassword').value='';
+  $('authError').classList.remove('show');
+  $('authSuccess').classList.remove('show');
+  $('authSubmit').textContent='Anmelden';
+  authMode='login';
+});
+
+/* ── Supabase Daten laden/speichern ── */
+async function loadUserData(userId){
+  const{data,error}=await supa.from('user_data').select('*').eq('id',userId).single();
+  if(error&&error.code==='PGRST116'){
+    // Neuer Nutzer: leeren Datensatz anlegen
+    await supa.from('user_data').insert({id:userId,explored:[],favorites:[],mein_bezirk:'',streak_count:0,streak_last:''});
+    return;
+  }
+  if(data){
+    explored=new Set(data.explored||[]);
+    favorites=new Set(data.favorites||[]);
+    meinBezirk=data.mein_bezirk||'';
+    // Streak aus DB
+    const today=new Date().toDateString();
+    const yesterday=new Date(Date.now()-86400000).toDateString();
+    let count=data.streak_count||0;
+    if(data.streak_last===today){count=data.streak_count;}
+    else if(data.streak_last===yesterday){count=(data.streak_count||0)+1;}
+    else{count=1;}
+    if(count!==(data.streak_count||0)||data.streak_last!==today){
+      await supa.from('user_data').update({streak_count:count,streak_last:today}).eq('id',userId);
+    }
+    if(count>1){$('streakCount').textContent=count;$('streakBadge').style.display='flex';}
+  }
+}
+
+function scheduleSave(){
+  setSyncStatus('syncing');
+  clearTimeout(syncTimer);
+  syncTimer=setTimeout(saveUserData,1200);
+}
+
+async function saveUserData(){
+  if(!currentUser)return;
+  const{error}=await supa.from('user_data').upsert({
+    id:currentUser.id,
+    explored:[...explored],
+    favorites:[...favorites],
+    mein_bezirk:meinBezirk,
+    updated_at:new Date().toISOString()
+  });
+  if(!error)setSyncStatus('saved');
+  else setSyncStatus('error');
+}
+
+function setSyncStatus(status){
+  const dot=$('syncDot'),txt=$('syncText');
+  if(!dot)return;
+  if(status==='syncing'){dot.style.background='#f59e0b';txt.textContent='Speichert…';}
+  else if(status==='saved'){dot.style.background='#22c55e';txt.textContent='Gespeichert';}
+  else{dot.style.background='#e24b4a';txt.textContent='Fehler';}
+}
+
+/* ── Auth State Listener ── */
+supa.auth.onAuthStateChange(async(event,session)=>{
+  if(session&&session.user){
+    currentUser=session.user;
+    const email=session.user.email;
+    $('userEmail').textContent=email.split('@')[0];
+    $('userBar').style.display='flex';
+    $('authScreen').classList.add('hidden');
+    await loadUserData(session.user.id);
+    // Re-render falls Daten jetzt anders
+    renderAllLists();
+    if($('page-fortschritt').classList.contains('active'))renderFortschritt();
+  } else {
+    $('authScreen').classList.remove('hidden');
+    $('userBar').style.display='none';
+  }
+});
 
 /* ── Data ── */
 function normalize(obj){
@@ -643,7 +848,7 @@ async function tryFetch(){
 }
 tryFetch();
 // Autofokus Suchfeld beim Start (nach kurzem Delay für Mobile)
-window.addEventListener('load',()=>setTimeout(()=>searchInput.focus(),300));
+window.addEventListener('load',()=>{/* Fokus nach Login */});
 
 /* ── Helpers ── */
 function escHtml(s){return(s||'').toString().replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
@@ -654,11 +859,12 @@ function getDekade(d){const y=getDatumYear(d);return y?Math.floor(y/10)*10:null;
 function seededRandom(seed){let s=seed;return()=>{s=(s*1664525+1013904223)&0xffffffff;return(s>>>0)/0xffffffff;};}
 function heartEmpty(){return`<svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 13.5C8 13.5 2 9.5 2 5.5a3 3 0 0 1 6 0 3 3 0 0 1 6 0c0 4-6 8-6 8z"/></svg>`;}
 function heartFilled(){return`<svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor" stroke="currentColor" stroke-width="1.5"><path d="M8 13.5C8 13.5 2 9.5 2 5.5a3 3 0 0 1 6 0 3 3 0 0 1 6 0c0 4-6 8-6 8z"/></svg>`;}
-function toggleFav(name){if(favorites.has(name))favorites.delete(name);else favorites.add(name);localStorage.setItem(CFG.STORAGE_KEY,JSON.stringify([...favorites]));}
-function toggleExplored(name){if(explored.has(name))explored.delete(name);else explored.add(name);localStorage.setItem(CFG.EXPLORED_KEY,JSON.stringify([...explored]));}
+function toggleFav(name){if(favorites.has(name))favorites.delete(name);else favorites.add(name);localStorage.setItem(CFG.STORAGE_KEY,JSON.stringify([...favorites]));scheduleSave();}
+function toggleExplored(name){if(explored.has(name))explored.delete(name);else explored.add(name);localStorage.setItem(CFG.EXPLORED_KEY,JSON.stringify([...explored]));scheduleSave();}
 
-/* ── Feature 1: Streak ── */
+/* ── Feature 1: Streak (wird jetzt in loadUserData via Supabase gesetzt) ── */
 function updateStreak(){
+  if(currentUser)return; // Supabase übernimmt
   const today=new Date().toDateString();
   const data=JSON.parse(localStorage.getItem(CFG.STREAK_KEY)||'{"last":"","count":0}');
   const yesterday=new Date(Date.now()-86400000).toDateString();
@@ -706,7 +912,7 @@ function renderBezirkSelector(){
   });
   sel.onchange=()=>{
     meinBezirk=sel.value;
-    localStorage.setItem('sp_mein_bezirk',meinBezirk);
+    localStorage.setItem('sp_mein_bezirk',meinBezirk);scheduleSave();
     renderChallenges();
   };
 }
