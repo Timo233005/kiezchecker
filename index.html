@@ -854,7 +854,6 @@ function renderSearchHistory(){
 function addToRecent(item){
   recentViews=[item.name,...recentViews.filter(n=>n!==item.name)].slice(0,8);
   localStorage.setItem(CFG.RECENT_KEY,JSON.stringify(recentViews));
-  renderRecentlyViewed();updateWelcomeState();
 }
 function renderRecentlyViewed(){
   /* recentlyViewedWrap wurde entfernt — Funktion ist deaktiviert */
