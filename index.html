@@ -755,11 +755,11 @@ function renderScoreCard(){
   const exploredCount=streets.filter(s=>explored.has(s.name)).length;
   const pct=total>0?Math.round(exploredCount/total*100):0;
   const scoreCard=document.createElement('div');scoreCard.className='score-card';
-  scoreCard.innerHTML=\`<div class="score-top">
-    <div><div class="score-num">\${exploredCount}</div><div class="score-pct">von \${total} Straßen erkundet</div></div>
-    <div style="text-align:right"><div style="font-family:var(--serif);font-size:28px;color:var(--accent)">\${pct}%</div><div style="font-size:12px;color:var(--muted)">deines Kiez</div></div>
+  scoreCard.innerHTML=`<div class="score-top">
+    <div><div class="score-num">${exploredCount}</div><div class="score-pct">von ${total} Straßen erkundet</div></div>
+    <div style="text-align:right"><div style="font-family:var(--serif);font-size:28px;color:var(--accent)">${pct}%</div><div style="font-size:12px;color:var(--muted)">deines Kiez</div></div>
   </div>
-  <div class="score-track"><div class="score-fill" style="width:\${pct}%"></div></div>\`;
+  <div class="score-track"><div class="score-fill" style="width:${pct}%"></div></div>`;
   grid.appendChild(scoreCard);
 }
 
