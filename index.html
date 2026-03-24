@@ -352,7 +352,6 @@ html,body{height:100%;font-family:var(--sans);background:var(--bg);color:var(--t
 
 <!-- PAGE 1: SUCHE -->
 <div class="page active" id="page-suche">
-
   <div class="sticky-header" id="stickyHeader">
     <div class="logo-wrap">
       <svg class="logo-svg" viewBox="0 0 52 52" fill="none">
@@ -368,88 +367,11 @@ html,body{height:100%;font-family:var(--sans);background:var(--bg);color:var(--t
         <h1 class="brand-title">Kiez</h1>
         <p class="brand-sub" id="statusText" style="display:none">Daten werden geladen…</p>
       </div>
-      <!-- Feature 1: Streak badge -->
-      <div class="streak-badge" id="streakBadge" style="display:none">
-        🔥 <span id="streakCount">1</span>
-      </div>
     </div>
     <div class="header-divider"></div>
   </div>
 
-  <!-- Straße des Tages -->
-  <div class="street-of-day" id="streetOfDay" style="display:none">
-    <div class="sod-kicker">Straße des Tages</div>
-    <div class="sod-name" id="sodName">—</div>
-    <div class="sod-herkunft" id="sodHerkunft"></div>
-    <div class="sod-footer">
-      <span class="sod-bezirk" id="sodBezirk"></span>
-      <span class="sod-arrow">›</span>
-    </div>
-  </div>
-
-  <!-- Fact card -->
-  <div class="fact-card" id="factCard" style="display:none" onclick="nextFact()">
-    <div class="fact-icon">💡</div>
-    <div><div class="fact-text" id="factText"></div><div class="fact-refresh">Neuer Fakt →</div></div>
-  </div>
-
-  <!-- Welcome -->
-  <div class="welcome-card" id="welcomeCard" style="display:none">
-    <div class="welcome-title">Willkommen bei Kiez</div>
-    <div class="welcome-text">Entdecke die Geschichte der Berliner Straßen und Plätze — woher ihre Namen kommen und wann sie benannt wurden.</div>
-    <div class="welcome-tips">
-      <div class="welcome-tip"><span class="tip-dot"></span>Suche ab 3 Buchstaben</div>
-      <div class="welcome-tip"><span class="tip-dot"></span>Öffne Bezirke für eine vollständige Liste</div>
-      <div class="welcome-tip"><span class="tip-dot"></span>Markiere Straßen als „erkundet" für deinen Score</div>
-    </div>
-  </div>
-
-  <!-- Recently viewed -->
-  <div class="recently-viewed" id="recentlyViewedWrap" style="display:none">
-    <div class="section-label">Zuletzt angesehen</div>
-    <div class="recent-scroll" id="recentlyViewedList"></div>
-  </div>
-
-  <!-- Discover today -->
-  <div class="discover-section" id="discoverSection" style="display:none">
-    <div class="section-label">Entdecke heute</div>
-    <div class="discover-scroll" id="discoverList"></div>
-  </div>
-
-  <!-- Feature 4: Quick cats with counts -->
-  <div class="quick-cats" id="quickCats" style="display:none">
-    <div class="qcat" data-qcat="personen">
-      <div class="qcat-icon">👤</div>
-      <div class="qcat-label">Nach Personen</div>
-      <div class="qcat-count" id="qcount-personen">…</div>
-      <div class="qcat-sub">Straßen mit Namenspaten</div>
-    </div>
-    <div class="qcat" data-qcat="historisch">
-      <div class="qcat-icon">🏛</div>
-      <div class="qcat-label">Historisch</div>
-      <div class="qcat-count" id="qcount-historisch">…</div>
-      <div class="qcat-sub">Vor 1900 benannt</div>
-    </div>
-    <div class="qcat" data-qcat="laengste">
-      <div class="qcat-icon">📏</div>
-      <div class="qcat-label">Längste Straßen</div>
-      <div class="qcat-count" id="qcount-laengste">…</div>
-      <div class="qcat-sub">Nach Länge sortiert</div>
-    </div>
-    <div class="qcat" data-qcat="neueste">
-      <div class="qcat-icon">✨</div>
-      <div class="qcat-label">Neueste</div>
-      <div class="qcat-count" id="qcount-neueste">…</div>
-      <div class="qcat-sub">Zuletzt benannt</div>
-    </div>
-  </div>
-
-  <!-- Feature 5: Random button -->
-  <button class="random-btn" id="randomBtn" style="display:none">
-    🎲 Zufällige Straße entdecken
-  </button>
-
-  <!-- Search history -->
+  <!-- Zuletzt gesucht (einziger Startinhalt) -->
   <div class="search-history" id="searchHistoryWrap" style="display:none">
     <div class="search-history-label">Zuletzt gesucht</div>
     <div class="search-history-chips" id="searchHistoryChips"></div>
@@ -549,8 +471,8 @@ html,body{height:100%;font-family:var(--sans);background:var(--bg);color:var(--t
   </div>
 </div>
 
-<!-- PAGE 3: FAVORITEN -->
-<div class="page" id="page-favoriten">
+<!-- PAGE 3: FORTSCHRITT (Challenges + Favoriten + Stats) -->
+<div class="page" id="page-fortschritt">
   <div class="header">
     <div class="logo-wrap">
       <svg class="logo-svg" viewBox="0 0 52 52" fill="none">
@@ -561,35 +483,43 @@ html,body{height:100%;font-family:var(--sans);background:var(--bg);color:var(--t
         <line x1="8" y1="39" x2="16" y2="39" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.35"/>
         <line x1="36" y1="39" x2="44" y2="39" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.35"/>
       </svg>
-      <div class="brand"><span class="brand-kicker">Gemerkte Orte</span><h1 class="brand-title">Favoriten</h1><p class="brand-sub" id="favStatusText"></p></div>
+      <div class="brand">
+        <span class="brand-kicker">Mein Berlin</span>
+        <h1 class="brand-title">Fortschritt</h1>
+        <p class="brand-sub" id="fortschrittSubText">Erkundet, Challenges, Favoriten</p>
+      </div>
+      <div class="streak-badge" id="streakBadge" style="display:none">
+        🔥 <span id="streakCount">1</span>
+      </div>
     </div>
     <div class="header-divider"></div>
   </div>
-  <div id="favListContainer" class="list" aria-live="polite"></div>
-</div>
 
-<!-- PAGE 4: STATISTIKEN -->
-<div class="page" id="page-stats">
-  <div class="header">
-    <div class="logo-wrap">
-      <svg class="logo-svg" viewBox="0 0 52 52" fill="none">
-        <rect width="52" height="52" rx="14" fill="#c0392b"/>
-        <path d="M26 10C20.477 10 16 14.477 16 20c0 8 10 22 10 22s10-14 10-22c0-5.523-4.477-10-10-10z" fill="white" opacity="0.95"/>
-        <circle cx="26" cy="20" r="4.5" fill="#c0392b"/>
-        <line x1="8" y1="44" x2="44" y2="44" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
-        <line x1="8" y1="39" x2="16" y2="39" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.35"/>
-        <line x1="36" y1="39" x2="44" y2="39" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.35"/>
-      </svg>
-      <div class="brand"><span class="brand-kicker">Zahlen & Fakten</span><h1 class="brand-title">Statistiken</h1><p class="brand-sub">Über alle Einträge</p></div>
-    </div>
-    <div class="header-divider"></div>
+  <!-- Score-Card oben -->
+  <div class="stats-grid" id="scoreGrid" style="padding-bottom:0"></div>
+
+  <!-- Section: Challenges -->
+  <div style="padding:20px 20px 6px">
+    <div class="section-label">Challenges <span id="challengeSubText" style="font-size:11px;color:var(--muted);font-weight:400;letter-spacing:0;text-transform:none"></span></div>
+  </div>
+  <div id="challengesGrid" class="challenges-grid" style="padding-top:0"></div>
+
+  <!-- Section: Favoriten -->
+  <div style="padding:20px 20px 6px">
+    <div class="section-label">Favoriten <span id="favStatusText" style="font-size:11px;color:var(--muted);font-weight:400;letter-spacing:0;text-transform:none"></span></div>
+  </div>
+  <div id="favListContainer" class="list" style="padding-top:0" aria-live="polite"></div>
+
+  <!-- Section: Statistiken -->
+  <div style="padding:20px 20px 6px">
+    <div class="section-label">Statistiken</div>
   </div>
   <div class="stats-grid" id="statsGrid"></div>
 </div>
 
-<!-- PAGE: CHALLENGES -->
-<div class="page" id="page-challenges">
-  <div class="header">
+<!-- PAGE 4: ENTDECKEN -->
+<div class="page" id="page-entdecken">
+  <div class="sticky-header" id="entdeckenHeader">
     <div class="logo-wrap">
       <svg class="logo-svg" viewBox="0 0 52 52" fill="none">
         <rect width="52" height="52" rx="14" fill="#c0392b"/>
@@ -599,11 +529,70 @@ html,body{height:100%;font-family:var(--sans);background:var(--bg);color:var(--t
         <line x1="8" y1="39" x2="16" y2="39" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.35"/>
         <line x1="36" y1="39" x2="44" y2="39" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.35"/>
       </svg>
-      <div class="brand"><span class="brand-kicker">Ziele & Aufgaben</span><h1 class="brand-title">Challenges</h1><p class="brand-sub" id="challengeSubText">Lade Daten…</p></div>
+      <div class="brand">
+        <span class="brand-kicker">Berliner Straßenführer</span>
+        <h1 class="brand-title">Entdecken</h1>
+        <p class="brand-sub">Neu & Zufällig</p>
+      </div>
     </div>
     <div class="header-divider"></div>
   </div>
-  <div id="challengesGrid" class="challenges-grid"></div>
+
+  <!-- Straße des Tages -->
+  <div class="street-of-day" id="streetOfDay" style="display:none">
+    <div class="sod-kicker">Straße des Tages</div>
+    <div class="sod-name" id="sodName">—</div>
+    <div class="sod-herkunft" id="sodHerkunft"></div>
+    <div class="sod-footer">
+      <span class="sod-bezirk" id="sodBezirk"></span>
+      <span class="sod-arrow">›</span>
+    </div>
+  </div>
+
+  <!-- Fact card -->
+  <div class="fact-card" id="factCard" style="display:none" onclick="nextFact()">
+    <div class="fact-icon">💡</div>
+    <div><div class="fact-text" id="factText"></div><div class="fact-refresh">Neuer Fakt →</div></div>
+  </div>
+
+  <!-- Discover today -->
+  <div class="discover-section" id="discoverSection" style="display:none">
+    <div class="section-label">Entdecke heute</div>
+    <div class="discover-scroll" id="discoverList"></div>
+  </div>
+
+  <!-- Quick cats -->
+  <div class="quick-cats" id="quickCats" style="display:none">
+    <div class="qcat" data-qcat="personen">
+      <div class="qcat-icon">👤</div>
+      <div class="qcat-label">Nach Personen</div>
+      <div class="qcat-count" id="qcount-personen">…</div>
+      <div class="qcat-sub">Straßen mit Namenspaten</div>
+    </div>
+    <div class="qcat" data-qcat="historisch">
+      <div class="qcat-icon">🏛</div>
+      <div class="qcat-label">Historisch</div>
+      <div class="qcat-count" id="qcount-historisch">…</div>
+      <div class="qcat-sub">Vor 1900 benannt</div>
+    </div>
+    <div class="qcat" data-qcat="laengste">
+      <div class="qcat-icon">📏</div>
+      <div class="qcat-label">Längste Straßen</div>
+      <div class="qcat-count" id="qcount-laengste">…</div>
+      <div class="qcat-sub">Nach Länge sortiert</div>
+    </div>
+    <div class="qcat" data-qcat="neueste">
+      <div class="qcat-icon">✨</div>
+      <div class="qcat-label">Neueste</div>
+      <div class="qcat-count" id="qcount-neueste">…</div>
+      <div class="qcat-sub">Zuletzt benannt</div>
+    </div>
+  </div>
+
+  <!-- Random button -->
+  <button class="random-btn" id="randomBtn" style="display:none">
+    🎲 Zufällige Straße entdecken
+  </button>
 </div>
 
 </div><!-- .app -->
@@ -656,11 +645,10 @@ html,body{height:100%;font-family:var(--sans);background:var(--bg);color:var(--t
 
 <nav class="nav-bar">
   <div class="nav-inner">
-    <button class="nav-btn active" data-nav="suche">Suche</button>
-    <button class="nav-btn" data-nav="bezirke">Bezirke</button>
-    <button class="nav-btn" data-nav="favoriten">★ Favs</button>
-    <button class="nav-btn" data-nav="challenges">🏆</button>
-    <button class="nav-btn" data-nav="stats">Stats</button>
+    <button class="nav-btn active" data-nav="suche">🔍 Suche</button>
+    <button class="nav-btn" data-nav="bezirke">🗺 Bezirke</button>
+    <button class="nav-btn" data-nav="fortschritt">🏆 Fortschritt</button>
+    <button class="nav-btn" data-nav="entdecken">✨ Entdecken</button>
   </div>
 </nav>
 
@@ -695,9 +683,9 @@ function loadData(raw){
   setTimeout(()=>{if($('statusText'))$('statusText').style.display='none';},2500);
   buildBezirkeTiles();
   buildDecadeChips();
-  renderStartPage();
-  renderFavList();
-  if($('page-challenges').classList.contains('active'))renderChallenges();
+  renderSearchHistory();
+  if($('page-fortschritt').classList.contains('active'))renderFortschritt();
+  if($('page-entdecken').classList.contains('active'))renderEntdecken();
 }
 async function tryFetch(){
   try{
@@ -705,13 +693,14 @@ async function tryFetch(){
     if(!res.ok)throw new Error('HTTP '+res.status);
     const raw=await res.json();
     loadData(raw);
-    startTypewriter();
   }catch(e){
     console.error('Fehler beim Laden der Daten:',e);
     if(!streets.length){$('statusText').style.display='block';$('statusText').textContent='Daten konnten nicht geladen werden';}
   }
 }
 tryFetch();
+// Autofokus Suchfeld beim Start (nach kurzem Delay für Mobile)
+window.addEventListener('load',()=>setTimeout(()=>searchInput.focus(),300));
 
 /* ── Helpers ── */
 function escHtml(s){return(s||'').toString().replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
@@ -739,23 +728,39 @@ function updateStreak(){
 }
 updateStreak();
 
-/* ── Start page ── */
-function renderStartPage(){
+/* ── Entdecken Page ── */
+function renderEntdecken(){
   if(!streets.length)return;
   try{renderStreetOfDay();}catch(e){console.warn('renderStreetOfDay',e);}
   try{renderFacts();}catch(e){console.warn('renderFacts',e);}
   try{renderDiscoverToday();}catch(e){console.warn('renderDiscoverToday',e);}
-  try{renderRecentlyViewed();}catch(e){console.warn('renderRecentlyViewed',e);}
-  try{renderSearchHistory();}catch(e){console.warn('renderSearchHistory',e);}
   try{renderQuickCats();}catch(e){console.warn('renderQuickCats',e);}
-  try{updateWelcomeState();}catch(e){console.warn('updateWelcomeState',e);}
   if($('randomBtn'))$('randomBtn').style.display='block';
 }
-function updateWelcomeState(){
-  const hasRecent=recentViews.length>0;
-  const isNewUser=!searchHistory.length&&explored.size===0&&favorites.size===0;
-  $('welcomeCard').style.display=isNewUser?'block':'none';
-  $('recentlyViewedWrap').style.display=hasRecent?'block':'none';
+
+/* ── Fortschritt Page ── */
+function renderFortschritt(){
+  if(!streets.length)return;
+  try{renderScoreCard();}catch(e){console.warn('renderScoreCard',e);}
+  try{renderChallenges();}catch(e){console.warn('renderChallenges',e);}
+  try{renderFavList();}catch(e){console.warn('renderFavList',e);}
+  try{renderStats();}catch(e){console.warn('renderStats',e);}
+  updateStreak();
+}
+
+function renderScoreCard(){
+  const grid=$('scoreGrid');grid.innerHTML='';
+  if(!streets.length)return;
+  const total=streets.length;
+  const exploredCount=streets.filter(s=>explored.has(s.name)).length;
+  const pct=total>0?Math.round(exploredCount/total*100):0;
+  const scoreCard=document.createElement('div');scoreCard.className='score-card';
+  scoreCard.innerHTML=\`<div class="score-top">
+    <div><div class="score-num">\${exploredCount}</div><div class="score-pct">von \${total} Straßen erkundet</div></div>
+    <div style="text-align:right"><div style="font-family:var(--serif);font-size:28px;color:var(--accent)">\${pct}%</div><div style="font-size:12px;color:var(--muted)">deines Kiez</div></div>
+  </div>
+  <div class="score-track"><div class="score-fill" style="width:\${pct}%"></div></div>\`;
+  grid.appendChild(scoreCard);
 }
 
 /* Straße des Tages */
@@ -969,7 +974,8 @@ function renderList(container,list,query,showAlpha){
 
 function renderAllLists(){
   if(currentQuery.trim().length>=3)renderSearchList();
-  renderBezirkList();renderFavList();
+  renderBezirkList();
+  if($('page-fortschritt').classList.contains('active'))renderFavList();
   if(sheet.classList.contains('open')&&currentDetailItem)updateSheetFavBtn(currentDetailItem.name);
 }
 
@@ -1105,18 +1111,6 @@ function renderStats(){
   const total=streets.length;
   const byType={Straße:0,Platz:0,Weg:0,Ort:0};
   streets.forEach(s=>{byType[getType(s.name)]++;});
-
-  // Personal score card
-  const scoreCard=document.createElement('div');scoreCard.className='score-card';scoreCard.style.animationDelay='0s';
-  const exploredCount=streets.filter(s=>explored.has(s.name)).length;
-  const pct=total>0?Math.round(exploredCount/total*100):0;
-  scoreCard.innerHTML=`
-    <div class="score-top">
-      <div><div class="stat-number">${exploredCount}</div><div class="stat-label">von ${total} Straßen erkundet</div></div>
-      <div style="text-align:right"><div style="font-family:var(--serif);font-size:28px;color:var(--accent)">${pct}%</div><div style="font-size:12px;color:var(--muted)">deines Kiez</div></div>
-    </div>
-    <div class="score-track"><div class="score-fill" style="width:${pct}%"></div></div>`;
-  grid.appendChild(scoreCard);
 
   // Total + bezirke
   addStatCard(grid,total,'Einträge gesamt',false,'.07s');
@@ -1311,11 +1305,10 @@ document.querySelectorAll('.nav-btn').forEach(btn=>{
     document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
     $(`page-${nav}`).classList.add('active');
     $('alphaNav').classList.remove('visible');
-    if(nav==='suche'&&streets.length)renderStartPage();
-    if(nav==='favoriten')renderFavList();
-    if(nav==='stats')renderStats();
-    if(nav==='challenges')renderChallenges();
+    if(nav==='fortschritt')renderFortschritt();
+    if(nav==='entdecken'&&streets.length)renderEntdecken();
     if(nav==='bezirke'&&!activeBezirk){$('bezirkTileView').style.display='block';$('bezirkListView').style.display='none';}
+    if(nav==='suche')setTimeout(()=>searchInput.focus(),100);
   });
 });
 
@@ -1365,8 +1358,8 @@ $('exploredBtn').addEventListener('click',()=>{
   updateExploredBtn(currentDetailItem.name);
   renderAllLists();
   // refresh stats if visible
-  if($('page-stats').classList.contains('active'))renderStats();
-  if($('page-challenges').classList.contains('active'))renderChallenges();
+  if($('page-fortschritt').classList.contains('active'))renderFortschritt();
+  if($('page-fortschritt').classList.contains('active'))renderFortschritt();
 });
 function closeDetail(){
   sheet.classList.remove('open');sheet.setAttribute('aria-hidden','true');
