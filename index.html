@@ -700,8 +700,16 @@ function loadData(raw){
   if($('page-challenges').classList.contains('active'))renderChallenges();
 }
 async function tryFetch(){
-  try{const res=await fetch('data.json');if(!res.ok)throw new Error();loadData(await res.json());}
-  catch(e){if(!streets.length){$('statusText').style.display='block';$('statusText').textContent='Daten konnten nicht geladen werden';}}
+  try{
+    const res=await fetch('data.json');
+    if(!res.ok)throw new Error('HTTP '+res.status);
+    const raw=await res.json();
+    loadData(raw);
+    startTypewriter();
+  }catch(e){
+    console.error('Fehler beim Laden der Daten:',e);
+    if(!streets.length){$('statusText').style.display='block';$('statusText').textContent='Daten konnten nicht geladen werden';}
+  }
 }
 tryFetch();
 
@@ -733,14 +741,15 @@ updateStreak();
 
 /* ── Start page ── */
 function renderStartPage(){
-  renderStreetOfDay();
-  renderFacts();
-  renderDiscoverToday();
-  renderRecentlyViewed();
-  renderSearchHistory();
-  renderQuickCats();
-  updateWelcomeState();
-  $('randomBtn').style.display='block';
+  if(!streets.length)return;
+  try{renderStreetOfDay();}catch(e){console.warn('renderStreetOfDay',e);}
+  try{renderFacts();}catch(e){console.warn('renderFacts',e);}
+  try{renderDiscoverToday();}catch(e){console.warn('renderDiscoverToday',e);}
+  try{renderRecentlyViewed();}catch(e){console.warn('renderRecentlyViewed',e);}
+  try{renderSearchHistory();}catch(e){console.warn('renderSearchHistory',e);}
+  try{renderQuickCats();}catch(e){console.warn('renderQuickCats',e);}
+  try{updateWelcomeState();}catch(e){console.warn('updateWelcomeState',e);}
+  if($('randomBtn'))$('randomBtn').style.display='block';
 }
 function updateWelcomeState(){
   const hasRecent=recentViews.length>0;
@@ -1302,6 +1311,7 @@ document.querySelectorAll('.nav-btn').forEach(btn=>{
     document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
     $(`page-${nav}`).classList.add('active');
     $('alphaNav').classList.remove('visible');
+    if(nav==='suche'&&streets.length)renderStartPage();
     if(nav==='favoriten')renderFavList();
     if(nav==='stats')renderStats();
     if(nav==='challenges')renderChallenges();
