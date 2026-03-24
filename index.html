@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Kiez — Berliner Straßenführer</title>
+<title>Straßenpost — Berliner Straßenführer</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
@@ -20,13 +20,13 @@
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;font-family:var(--sans);background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
-.app{max-width:520px;margin:0 auto;min-height:100vh;padding-bottom:80px}
+.app{max-width:520px;margin:0 auto;min-height:100vh;padding-bottom:90px}
 .page{display:none}.page.active{display:block}
 
 /* ── Nav ── */
-.nav-bar{position:fixed;left:0;right:0;bottom:0;z-index:40;background:var(--accent);display:flex;justify-content:center}
+.nav-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:520px;z-index:40;background:var(--accent)}
 .nav-inner{width:100%;display:flex;background:var(--accent)}
-.nav-btn{flex:1;padding:12px 4px 14px;border:none;background:transparent;cursor:pointer;font-size:10px;font-weight:600;font-family:var(--sans);color:rgba(255,255,255,.45);transition:all var(--tr);white-space:nowrap;display:flex;flex-direction:column;align-items:center;gap:4px;letter-spacing:.04em;text-transform:uppercase}
+.nav-btn{flex:1;padding:10px 2px 12px;border:none;background:transparent;cursor:pointer;font-size:9px;font-weight:600;font-family:var(--sans);color:rgba(255,255,255,.45);transition:all var(--tr);white-space:nowrap;display:flex;flex-direction:column;align-items:center;gap:3px;letter-spacing:.03em;text-transform:uppercase}
 .nav-btn svg{opacity:.45;transition:opacity var(--tr)}
 .nav-btn.active{color:#fff}.nav-btn.active svg{opacity:1}
 .nav-btn:hover:not(.active){color:rgba(255,255,255,.7)}
@@ -317,7 +317,18 @@ html,body{height:100%;font-family:var(--sans);background:var(--bg);color:var(--t
 <!-- PAGE 1: SUCHE -->
 <div class="page active" id="page-suche">
   <div class="suche-header">
-    <div class="suche-title">Kiez <span>Berlin</span></div>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px">
+      <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+        <rect width="40" height="40" rx="10" fill="rgba(255,255,255,0.15)"/>
+        <rect x="7" y="11" width="26" height="13" rx="3" fill="white" opacity="0.95"/>
+        <rect x="7" y="11" width="26" height="13" rx="3" stroke="rgba(255,255,255,0.3)" stroke-width="0.5"/>
+        <text x="20" y="21.5" text-anchor="middle" font-family="Georgia,serif" font-size="7.5" font-weight="700" fill="#2d4a3e">KIEZ ST.</text>
+        <line x1="19" y1="24" x2="19" y2="32" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.7"/>
+        <line x1="21" y1="24" x2="21" y2="32" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.7"/>
+        <rect x="13" y="31" width="14" height="3" rx="1.5" fill="rgba(255,255,255,0.4)"/>
+      </svg>
+      <div class="suche-title">Straßenpost</div>
+    </div>
     <p id="statusText" style="display:none;font-size:12px;color:rgba(255,255,255,.6);margin-bottom:8px">Daten werden geladen…</p>
     <div class="suche-searchbar">
       <div class="suche-input-wrap" style="position:relative">
@@ -422,6 +433,14 @@ html,body{height:100%;font-family:var(--sans);background:var(--bg);color:var(--t
   <!-- Score -->
   <div id="scoreGrid" style="padding:16px 20px 0"></div>
 
+  <!-- Bezirks-Auswahl -->
+  <div id="bezirkSelector" style="padding:16px 20px 0;display:none">
+    <div style="font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Mein Bezirk</div>
+    <select id="meinBezirkSelect" style="width:100%;padding:11px 14px;border-radius:10px;border:1.5px solid var(--line);background:var(--card);font-size:14px;font-family:var(--sans);color:var(--text);outline:none;cursor:pointer;appearance:none;-webkit-appearance:none;background-image:url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 12 12%22><path fill=%22%238b5e3c%22 d=%22M6 8L1 3h10z%22/></svg>');background-repeat:no-repeat;background-position:right 14px center">
+      <option value="">Bezirk wählen…</option>
+    </select>
+  </div>
+
   <!-- Challenges -->
   <div class="fortschritt-section">
     <span class="fortschritt-section-label">Challenges</span>
@@ -436,9 +455,13 @@ html,body{height:100%;font-family:var(--sans);background:var(--bg);color:var(--t
   </div>
   <div id="favListContainer" class="list" aria-live="polite"></div>
 
-  <!-- Statistiken -->
-  <div class="fortschritt-section">
-    <span class="fortschritt-section-label">Statistiken</span>
+</div>
+
+<!-- PAGE: STATISTIKEN -->
+<div class="page" id="page-statistiken">
+  <div class="page-header">
+    <div class="page-header-kicker">Zahlen &amp; Fakten</div>
+    <div class="page-header-title">Statistiken</div>
   </div>
   <div class="stats-grid" id="statsGrid"></div>
 </div>
@@ -447,7 +470,7 @@ html,body{height:100%;font-family:var(--sans);background:var(--bg);color:var(--t
 <div class="page" id="page-entdecken">
   <div class="entdecken-header">
     <div class="entdecken-kicker">Berliner Straßenführer</div>
-    <div class="entdecken-title" id="entdeckenTitle">Entdecken</div>
+    <div class="entdecken-title">Straßenpost</div>
     <div class="sod-card" id="streetOfDay" style="display:none" onclick="">
       <div class="sod-kicker">Straße des Tages</div>
       <div class="sod-name" id="sodName">—</div>
@@ -554,19 +577,23 @@ html,body{height:100%;font-family:var(--sans);background:var(--bg);color:var(--t
 <nav class="nav-bar">
   <div class="nav-inner">
     <button class="nav-btn active" data-nav="suche">
-      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="8.5" cy="8.5" r="5.5"/><path d="m13.5 13.5 3.5 3.5"/></svg>
+      <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="8.5" cy="8.5" r="5.5"/><path d="m13.5 13.5 3.5 3.5"/></svg>
       Suche
     </button>
     <button class="nav-btn" data-nav="bezirke">
-      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 17V7l7-4 7 4v10"/><path d="M8 17v-5h4v5"/></svg>
+      <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 17V7l7-4 7 4v10"/><path d="M8 17v-5h4v5"/></svg>
       Bezirke
     </button>
     <button class="nav-btn" data-nav="fortschritt">
-      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 2l2.4 5h5.6l-4.5 3.3 1.7 5.2L10 12.3l-5.2 3.2 1.7-5.2L2 7h5.6z"/></svg>
+      <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 2l2.4 5h5.6l-4.5 3.3 1.7 5.2L10 12.3l-5.2 3.2 1.7-5.2L2 7h5.6z"/></svg>
       Fortschritt
     </button>
+    <button class="nav-btn" data-nav="statistiken">
+      <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 17V11M7 17V7M11 17V9M15 17V4"/></svg>
+      Statistiken
+    </button>
     <button class="nav-btn" data-nav="entdecken">
-      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="10" cy="10" r="7.5"/><path d="m13 7-2 6-4-4 6-2z"/></svg>
+      <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="10" cy="10" r="7.5"/><path d="m13 7-2 6-4-4 6-2z"/></svg>
       Entdecken
     </button>
   </div>
@@ -604,7 +631,7 @@ function loadData(raw){
   buildBezirkeTiles();
   buildDecadeChips();
   renderSearchHistory();
-  if($('page-fortschritt').classList.contains('active'))renderFortschritt();
+  if($('page-fortschritt').classList.contains('active'))renderFortschritt();if($('page-statistiken').classList.contains('active'))renderStats();
   if($('page-entdecken').classList.contains('active'))renderEntdecken();
 }
 async function tryFetch(){
@@ -659,13 +686,33 @@ function renderEntdecken(){
 }
 
 /* ── Fortschritt Page ── */
+let meinBezirk=localStorage.getItem('sp_mein_bezirk')||'';
+
 function renderFortschritt(){
   if(!streets.length)return;
   try{renderScoreCard();}catch(e){console.warn('renderScoreCard',e);}
+  try{renderBezirkSelector();}catch(e){console.warn('renderBezirkSelector',e);}
   try{renderChallenges();}catch(e){console.warn('renderChallenges',e);}
   try{renderFavList();}catch(e){console.warn('renderFavList',e);}
-  try{renderStats();}catch(e){console.warn('renderStats',e);}
   updateStreak();
+}
+
+function renderBezirkSelector(){
+  const sel=$('meinBezirkSelect');
+  if(!sel)return;
+  $('bezirkSelector').style.display='block';
+  sel.innerHTML='<option value="">Kein Bezirk gewählt…</option>';
+  bezirke.forEach(b=>{
+    const opt=document.createElement('option');
+    opt.value=b;opt.textContent=b.replace('Berlin-','');
+    if(b===meinBezirk)opt.selected=true;
+    sel.appendChild(opt);
+  });
+  sel.onchange=()=>{
+    meinBezirk=sel.value;
+    localStorage.setItem('sp_mein_bezirk',meinBezirk);
+    renderChallenges();
+  };
 }
 
 function renderScoreCard(){
@@ -1226,6 +1273,7 @@ document.querySelectorAll('.nav-btn').forEach(btn=>{
     $(`page-${nav}`).classList.add('active');
     $('alphaNav').classList.remove('visible');
     if(nav==='fortschritt')renderFortschritt();
+    if(nav==='statistiken')renderStats();
     if(nav==='entdecken'&&streets.length)renderEntdecken();
     if(nav==='bezirke'&&!activeBezirk){$('bezirkTileView').style.display='block';$('bezirkListView').style.display='none';}
     if(nav==='suche')setTimeout(()=>searchInput.focus(),100);
@@ -1278,8 +1326,8 @@ $('exploredBtn').addEventListener('click',()=>{
   updateExploredBtn(currentDetailItem.name);
   renderAllLists();
   // refresh stats if visible
-  if($('page-fortschritt').classList.contains('active'))renderFortschritt();
-  if($('page-fortschritt').classList.contains('active'))renderFortschritt();
+  if($('page-fortschritt').classList.contains('active'))renderFortschritt();if($('page-statistiken').classList.contains('active'))renderStats();
+  if($('page-fortschritt').classList.contains('active'))renderFortschritt();if($('page-statistiken').classList.contains('active'))renderStats();
 });
 function closeDetail(){
   sheet.classList.remove('open');sheet.setAttribute('aria-hidden','true');
@@ -1415,9 +1463,30 @@ function renderChallenges(){
     return;
   }
   grid.innerHTML='';
-  const challenges=getChallenges();
+  let challenges=getChallenges();
   const completed=challenges.filter(c=>calcChallenge(c).done).length;
   $('challengeSubText').textContent=completed+' / '+challenges.length+' abgeschlossen';
+
+  // Wenn Bezirk gewählt: Bezirks-Challenges zuerst, Rest danach mit Trennlinie
+  if(meinBezirk){
+    const shortBezirk=meinBezirk.replace('Berlin-','');
+    const mine=challenges.filter(c=>c.desc&&c.desc.includes(shortBezirk)||c.title&&c.title.includes(shortBezirk));
+    const rest=challenges.filter(c=>!mine.includes(c));
+    if(mine.length){
+      const lbl=document.createElement('div');
+      lbl.style.cssText='font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);padding:4px 2px 8px;';
+      lbl.textContent='Mein Bezirk · '+shortBezirk;
+      grid.appendChild(lbl);
+      mine.forEach(ch=>appendChallengeCard(grid,ch));
+      const div=document.createElement('div');
+      div.style.cssText='font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:16px 2px 8px;border-top:1px solid var(--line);margin-top:4px;';
+      div.textContent='Alle Challenges';
+      grid.appendChild(div);
+      rest.forEach(ch=>appendChallengeCard(grid,ch));
+      attachChallengeListeners(grid,challenges);
+      return;
+    }
+  }
 
   challenges.forEach(ch=>{
     const {done,current,total}=calcChallenge(ch);
@@ -1477,6 +1546,42 @@ function calcChallenge(ch){
   const target=ch.target||all.length;
   const current=all.filter(s=>explored.has(s.name)).length;
   return{done:current>=target,current:Math.min(current,target),total:target};
+}
+
+function appendChallengeCard(grid,ch){
+  const {done,current,total}=calcChallenge(ch);
+  const pct=total>0?Math.min(100,Math.round(current/total*100)):0;
+  const card=document.createElement('div');
+  card.className='challenge-card'+(done?' done':'');
+  let progressHtml='';
+  if(done){
+    progressHtml='<div class="challenge-done-badge"><svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M2 7l4 4 6-6"/></svg> Abgeschlossen!</div>';
+  } else {
+    progressHtml='<div class="challenge-bar-wrap"><div class="challenge-bar-track"><div class="challenge-bar-fill" style="width:'+pct+'%"></div></div><span class="challenge-count">'+current+' / '+total+'</span></div>';
+    progressHtml+=current>0
+      ?'<button class="challenge-view-btn" data-chid="'+ch.id+'">Noch '+(total-current)+' fehlen → Liste anzeigen</button>'
+      :'<button class="challenge-view-btn" data-chid="'+ch.id+'">Straßen anzeigen →</button>';
+  }
+  card.innerHTML='<div class="challenge-header"><span class="challenge-emoji">'+ch.emoji+'</span><div class="challenge-info"><div class="challenge-title">'+escHtml(ch.title)+'</div><div class="challenge-desc">'+escHtml(ch.desc)+'</div></div><span class="challenge-badge '+ch.diff+'">'+(ch.diff==='easy'?'Leicht':ch.diff==='medium'?'Mittel':'Schwer')+'</span></div><div class="challenge-progress">'+progressHtml+'</div>';
+  grid.appendChild(card);
+}
+
+function attachChallengeListeners(grid,challenges){
+  grid.querySelectorAll('.challenge-view-btn').forEach(btn=>{
+    btn.addEventListener('click',e=>{
+      e.stopPropagation();
+      const ch=challenges.find(c=>c.id===btn.dataset.chid);
+      if(!ch)return;
+      const list=ch.fn().filter(s=>!explored.has(s.name));
+      document.querySelector('[data-nav="suche"]').click();
+      setTimeout(()=>searchInput.focus(),150);
+      currentQuery='';$('searchInput').value='';
+      $('searchUI').classList.remove('hidden');
+      $('countText').innerHTML='<strong>'+list.length+'</strong> verbleibende Straßen für „'+escHtml(ch.title)+'"';
+      renderList($('listContainer'),list,'',false);
+      $('searchUI').scrollIntoView({behavior:'smooth',block:'start'});
+    });
+  });
 }
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
