@@ -717,7 +717,7 @@ tryFetch();
 function escHtml(s){return(s||'').toString().replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function highlight(t,q){if(!q)return escHtml(t);const e=q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');return escHtml(t).replace(new RegExp(`(${escHtml(e)})`,'gi'),'<mark>$1</mark>');}
 function getType(n){const l=(n||'').toLowerCase();if(l.includes('platz')||l.includes('anger')||l.includes('markt'))return'Platz';if(l.includes('straße')||l.includes('strasse')||l.includes('allee')||l.includes('chaussee')||l.includes('damm'))return'Straße';if(l.includes('weg')||l.includes('pfad')||l.includes('ufer')||l.includes('promenade'))return'Weg';return'Ort';}
-function getDatumYear(d){const m=(d||'').match(/\d{4}/);return m?parseInt(m[0]):null;}
+function getDatumYear(d){const m=String(d||'').match(/\d{4}/);return m?parseInt(m[0]):null;}
 function getDekade(d){const y=getDatumYear(d);return y?Math.floor(y/10)*10:null;}
 function seededRandom(seed){let s=seed;return()=>{s=(s*1664525+1013904223)&0xffffffff;return(s>>>0)/0xffffffff;};}
 function heartEmpty(){return`<svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 13.5C8 13.5 2 9.5 2 5.5a3 3 0 0 1 6 0 3 3 0 0 1 6 0c0 4-6 8-6 8z"/></svg>`;}
