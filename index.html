@@ -857,22 +857,10 @@ function addToRecent(item){
   renderRecentlyViewed();updateWelcomeState();
 }
 function renderRecentlyViewed(){
-  const wrap=$('recentlyViewedWrap'),list=$('recentlyViewedList');
-  const items=recentViews.map(n=>streets.find(s=>s.name===n)).filter(Boolean);
-  if(!items.length){wrap.style.display='none';return;}
-  wrap.style.display='block';$('welcomeCard').style.display='none';list.innerHTML='';
-  items.forEach(item=>{
-    const card=document.createElement('div');card.className='recent-card';
-    card.innerHTML=`<div class="recent-card-type">${getType(item.name)}</div><div class="recent-card-name">${escHtml(item.name)}</div>${item.bezirk?`<div class="recent-card-bezirk">${escHtml(item.bezirk.replace('Berlin-',''))}</div>`:''}`;
-    card.addEventListener('click',()=>openDetail(item));list.appendChild(card);
-  });
+  /* recentlyViewedWrap wurde entfernt — Funktion ist deaktiviert */
 }
 
-/* Sticky header */
-window.addEventListener('scroll',()=>{
-  if(window.scrollY>60)$('stickyHeader').classList.add('compact');
-  else $('stickyHeader').classList.remove('compact');
-},{passive:true});
+/* Sticky header entfernt — kein stickyHeader mehr im DOM */
 
 /* Decade chips */
 function buildDecadeChips(){
