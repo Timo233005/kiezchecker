@@ -615,6 +615,7 @@ html,body{height:100%;font-family:var(--sans);background:var(--bg);color:var(--t
     <div id="sheetBadge" class="sheet-type-badge Ort">Ort</div>
     <h2 id="sheetTitle" class="sheet-title">—</h2>
     <p id="sheetBezirk" class="sheet-bezirk"></p>
+    <div class="sheet-row" id="sheetOrtsteilRow"><div class="sheet-row-label">Ortsteil</div><div id="sheetOrtsteil" class="sheet-row-val">—</div></div>
     <div class="sheet-row"><div class="sheet-row-label">Namensherkunft</div><div id="sheetHerkunft" class="sheet-row-val">—</div></div>
     <div class="sheet-row"><div class="sheet-row-label">Datum der Benennung</div><div id="sheetDatum" class="sheet-row-val">—</div></div>
     <div class="sheet-row" id="sheetLaengeRow"><div class="sheet-row-label">Länge / Maße</div><div id="sheetLaenge" class="sheet-row-val">—</div></div>
@@ -819,7 +820,17 @@ supa.auth.onAuthStateChange(async(event,session)=>{
 
 /* ── Data ── */
 function normalize(obj){
-  return{name:obj.Name||obj.name||'',herkunft:obj.Namensherkunft||obj.herkunft||'',datum:obj['Datum der Benennung']||obj.datum||'',laenge:obj['Länge/Maße in m']!=null?String(obj['Länge/Maße in m']):'',anmerkung:obj.Anmerkungen||obj.anmerkung||'',bezirk:obj.Bezirk||obj.bezirk||''};
+  const bezirk=(obj.Bezirk||obj.bezirk||'').trim();
+  const datum=obj['Datum der Benennung']||obj.datum||'';
+  return{
+    name:obj.Name||obj.name||'',
+    herkunft:obj.Namensherkunft||obj.herkunft||'',
+    datum:String(datum),
+    laenge:obj['Länge/Maße in m']!=null?String(obj['Länge/Maße in m']):'',
+    ortsteil:obj.Ortsteil||obj.ortsteil||'',
+    stadt:obj.Stadt||obj.stadt||'Berlin',
+    bezirk:bezirk==='#NV'?'':bezirk
+  };
 }
 function loadData(raw){
   streets=raw.map(normalize).filter(s=>s.name);
@@ -906,7 +917,7 @@ function renderBezirkSelector(){
   sel.innerHTML='<option value="">Kein Bezirk gewählt…</option>';
   bezirke.forEach(b=>{
     const opt=document.createElement('option');
-    opt.value=b;opt.textContent=b.replace('Berlin-','');
+    opt.value=b;opt.textContent=b;
     if(b===meinBezirk)opt.selected=true;
     sel.appendChild(opt);
   });
@@ -942,7 +953,7 @@ function renderStreetOfDay(){
   const sodItem=streets[idx];
   $('sodName').textContent=sodItem.name;
   $('sodHerkunft').textContent=sodItem.herkunft||'';
-  $('sodBezirk').textContent=(sodItem.bezirk||'').replace('Berlin-','');
+  $('sodBezirk').textContent=(sodItem.bezirk||'');
   $('streetOfDay').style.display='block';
   $('streetOfDay').setAttribute('onclick','');$('streetOfDay').onclick=()=>openDetail(sodItem);
 }
@@ -1001,7 +1012,7 @@ function renderDiscoverToday(){
   picks.forEach(item=>{
     const type=getType(item.name);
     const card=document.createElement('div');card.className='discover-card';
-    card.innerHTML=`<div class="discover-card-type"><span class="type-dot ${type}" style="width:6px;height:6px"></span>${type}</div><div class="discover-card-name">${escHtml(item.name)}</div><div class="discover-card-bezirk">${(item.bezirk||'').replace('Berlin-','')}</div>`;
+    card.innerHTML=`<div class="discover-card-type"><span class="type-dot ${type}" style="width:6px;height:6px"></span>${type}</div><div class="discover-card-name">${escHtml(item.name)}</div><div class="discover-card-bezirk">${(item.bezirk||'')}</div>`;
     card.addEventListener('click',()=>openDetail(item));list.appendChild(card);
   });
   $('discoverSection').style.display='block';
@@ -1110,7 +1121,7 @@ function renderList(container,list,query,showAlpha){
             ${isExplored?'<span title="Erkundet" style="color:var(--accent);font-size:10px">✓</span>':''}
             ${highlight(item.name,query)}
           </div>
-          ${item.bezirk?`<div class="item-sub">${escHtml(item.bezirk.replace('Berlin-',''))}</div>`:''}
+          ${item.bezirk?`<div class="item-sub">${escHtml(item.bezirk)}</div>`:''}
         </div>
         <div class="item-actions">
           <button class="fav-btn ${isFav?'active':''}">${isFav?heartFilled():heartEmpty()}</button>
@@ -1209,7 +1220,7 @@ function buildBezirkeTiles(){
   const grid=$('bezirkeGrid');grid.innerHTML='';
   bezirke.forEach((b,i)=>{
     const count=streets.filter(s=>s.bezirk===b).length;
-    const short=b.replace('Berlin-','');
+    const short=b;
     const tile=document.createElement('div');tile.className='bezirk-tile';tile.style.animationDelay=`${i*0.07}s`;tile.style.borderTopColor=TILE_COLORS[i%TILE_COLORS.length];
     tile.innerHTML=`<div class="bezirk-tile-icon">${TILE_ICONS[i%TILE_ICONS.length]}</div><div class="bezirk-tile-name">${escHtml(short)}</div><div class="bezirk-tile-count"><strong>${count}</strong> Einträge</div><span class="bezirk-tile-arrow">›</span>`;
     tile.addEventListener('click',()=>openBezirkList(b));grid.appendChild(tile);
@@ -1218,7 +1229,7 @@ function buildBezirkeTiles(){
 function openBezirkList(bezirk){
   activeBezirk=bezirk;activeBezirkFilter='alle';bezirkQuery='';$('bezirkSearchInput').value='';
   $('bezirkFilterBar').querySelectorAll('.filter-chip').forEach(c=>c.classList.toggle('active',c.dataset.bfilter==='alle'));
-  const short=bezirk.replace('Berlin-','');
+  const short=bezirk;
   $('bezirkListKicker').textContent='Bezirk · '+short;$('bezirkListTitle').textContent=short;
   $('bezirkTileView').style.display='none';$('bezirkListView').style.display='block';
   $('alphaNav').classList.remove('visible');renderBezirkList();
@@ -1318,7 +1329,7 @@ function renderStats(){
     const sub=streets.filter(s=>s.bezirk===b);
     const str=sub.filter(s=>getType(s.name)==='Straße').length;
     const platz=sub.filter(s=>getType(s.name)==='Platz').length;
-    return{label:b.replace('Berlin-',''),str,platz,total:sub.length};
+    return{label:b,str,platz,total:sub.length};
   }).sort((a,b)=>b.total-a.total);
   const maxBz=Math.max(...bzData.map(b=>b.total));
   bzCard.innerHTML=`<div style="font-weight:600;color:var(--text);font-size:13px;margin-bottom:4px">Bezirks-Vergleich</div>
@@ -1371,7 +1382,7 @@ function renderStats(){
     const sub=streets.filter(s=>s.bezirk===b);
     const exp=sub.filter(s=>explored.has(s.name)).length;
     const p=sub.length>0?Math.round(exp/sub.length*100):0;
-    return{label:b.replace('Berlin-',''),exp,tot:sub.length,p};
+    return{label:b,exp,tot:sub.length,p};
   }).sort((a,b)=>b.p-a.p).forEach(b=>{
     bzProgHtml+='<div><div style="display:flex;justify-content:space-between;margin-bottom:4px">';
     bzProgHtml+='<span style="font-size:12px;font-weight:500">'+escHtml(b.label)+'</span>';
@@ -1475,7 +1486,9 @@ function openDetail(item){
   const type=getType(item.name);
   $('sheetBadge').textContent=type;$('sheetBadge').className=`sheet-type-badge ${type}`;
   $('sheetTitle').textContent=item.name||'—';
-  $('sheetBezirk').textContent=item.bezirk||'';
+  $('sheetBezirk').textContent=[item.bezirk,item.ortsteil].filter(Boolean).join(' · ')||'';
+  if(item.ortsteil){$('sheetOrtsteil').textContent=item.ortsteil;$('sheetOrtsteilRow').style.display='';}
+  else $('sheetOrtsteilRow').style.display='none';
   $('sheetHerkunft').textContent=item.herkunft||'—';$('sheetHerkunft').className='sheet-row-val'+(item.herkunft?'':' empty');
   $('sheetDatum').textContent=item.datum||'Unbekannt';$('sheetDatum').className='sheet-row-val'+(item.datum?'':' empty');
   if(item.laenge){$('sheetLaenge').textContent=item.laenge+' m';$('sheetLaengeRow').style.display='';}else $('sheetLaengeRow').style.display='none';
@@ -1592,24 +1605,24 @@ function getChallenges(){
   return [
     // Bezirk-Challenges
     {id:'c01',emoji:'🗺️',title:'Kreuzberg komplett',desc:'Erkunde alle Straßen in Kreuzberg',diff:'hard',
-     fn:()=>streets.filter(s=>s.bezirk==='Berlin-Kreuzberg')},
+     fn:()=>streets.filter(s=>s.bezirk==='Friedrichshain-Kreuzberg')},
     {id:'c02',emoji:'🏙️',title:'Mitte entdecken',desc:'Erkunde alle Straßen in Mitte',diff:'hard',
-     fn:()=>streets.filter(s=>s.bezirk==='Berlin-Mitte')},
+     fn:()=>streets.filter(s=>s.bezirk==='Mitte')},
     {id:'c03',emoji:'🌳',title:'Prenzlauer Berg',desc:'Erkunde alle Straßen in Prenzlauer Berg',diff:'hard',
-     fn:()=>streets.filter(s=>s.bezirk==='Berlin-Prenzlauer Berg')},
+     fn:()=>streets.filter(s=>s.bezirk==='Pankow')},
     {id:'c04',emoji:'🎭',title:'Friedrichshain erkunden',desc:'Erkunde alle Straßen in Friedrichshain',diff:'hard',
-     fn:()=>streets.filter(s=>s.bezirk==='Berlin-Friedrichshain')},
-    {id:'c05',emoji:'🏰',title:'Alt Treptow Starter',desc:'Erkunde alle 34 Straßen in Alt Treptow',diff:'easy',
-     fn:()=>streets.filter(s=>s.bezirk==='Berlin-Alt Treptow')},
-    {id:'c06',emoji:'⚙️',title:'Siemensstadt meistern',desc:'Erkunde alle Straßen in Siemensstadt',diff:'easy',
-     fn:()=>streets.filter(s=>s.bezirk==='Berlin-Siemensstadt')},
+     fn:()=>streets.filter(s=>s.bezirk==='Friedrichshain-Kreuzberg')},
+    {id:'c05',emoji:'🏰',title:'Alt Treptow Starter',desc:'Erkunde alle Straßen in Treptow-Köpenick',diff:'easy',
+     fn:()=>streets.filter(s=>s.bezirk==='Treptow-Köpenick')},
+    {id:'c06',emoji:'⚙️',title:'Siemensstadt meistern',desc:'Erkunde alle Straßen in Spandau',diff:'easy',
+     fn:()=>streets.filter(s=>s.bezirk==='Spandau')},
     // Typ-Challenges
     {id:'c07',emoji:'⛲',title:'Platz-Sammler: Kreuzberg',desc:'Erkunde alle Plätze in Kreuzberg',diff:'easy',
-     fn:()=>streets.filter(s=>s.bezirk==='Berlin-Kreuzberg'&&getType(s.name)==='Platz')},
+     fn:()=>streets.filter(s=>s.bezirk==='Friedrichshain-Kreuzberg'&&getType(s.name)==='Platz')},
     {id:'c08',emoji:'⛲',title:'Platz-Sammler: Mitte',desc:'Erkunde alle Plätze in Mitte',diff:'medium',
-     fn:()=>streets.filter(s=>s.bezirk==='Berlin-Mitte'&&getType(s.name)==='Platz')},
+     fn:()=>streets.filter(s=>s.bezirk==='Mitte'&&getType(s.name)==='Platz')},
     {id:'c09',emoji:'🌲',title:'Alle Wege in Lichterfelde',desc:'Erkunde alle Wege & Pfade in Lichterfelde',diff:'medium',
-     fn:()=>streets.filter(s=>s.bezirk==='Berlin-Lichterfelde'&&getType(s.name)==='Weg')},
+     fn:()=>streets.filter(s=>s.bezirk==='Steglitz-Zehlendorf'&&getType(s.name)==='Weg')},
     {id:'c10',emoji:'🛤️',title:'Alleen-Sammler',desc:'Erkunde alle 47 Alleen in der Datenbank',diff:'medium',
      fn:()=>streets.filter(s=>s.name.toLowerCase().includes('allee'))},
     // Historische Challenges
@@ -1658,7 +1671,7 @@ function renderChallenges(){
 
   // Wenn Bezirk gewählt: Bezirks-Challenges zuerst, Rest danach mit Trennlinie
   if(meinBezirk){
-    const shortBezirk=meinBezirk.replace('Berlin-','');
+    const shortBezirk=meinBezirk;
     const mine=challenges.filter(c=>c.desc&&c.desc.includes(shortBezirk)||c.title&&c.title.includes(shortBezirk));
     const rest=challenges.filter(c=>!mine.includes(c));
     if(mine.length){
