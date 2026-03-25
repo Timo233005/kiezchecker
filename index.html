@@ -699,6 +699,7 @@ html,body{height:100%;font-family:var(--sans);background:var(--bg);color:var(--t
     <div id="sheetBadge" class="sheet-type-badge Ort">Ort</div>
     <h2 id="sheetTitle" class="sheet-title">—</h2>
     <p id="sheetBezirk" class="sheet-bezirk"></p>
+    <div id="sheetKategorie" style="display:none;font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.06em;margin-bottom:14px;margin-top:-12px"></div>
     <div class="sheet-row" id="sheetOrtsteilRow"><div class="sheet-row-label">Ortsteil</div><div id="sheetOrtsteil" class="sheet-row-val">—</div></div>
     <div class="sheet-row"><div class="sheet-row-label">Namensherkunft</div><div id="sheetHerkunft" class="sheet-row-val">—</div></div>
     <div class="sheet-row"><div class="sheet-row-label">Datum der Benennung</div><div id="sheetDatum" class="sheet-row-val">—</div></div>
@@ -917,6 +918,11 @@ supa.auth.onAuthStateChange(async(event,session)=>{
 function normalize(obj){
   const bezirk=(obj.Bezirk||obj.bezirk||'').trim();
   const datum=obj['Datum der Benennung']||obj.datum||'';
+  // Kategorie normalisieren: 'ort' → 'Ort', leer → 'Sonstiges'
+  let kat=(obj.Namenskategorie||obj.kategorie||'').trim();
+  if(kat==='ort')kat='Ort';
+  if(!kat)kat='Sonstiges';
+  const gesch=(obj.Geschlecht||obj.geschlecht||'').trim();
   return{
     name:obj.Name||obj.name||'',
     herkunft:obj.Namensherkunft||obj.herkunft||'',
@@ -924,7 +930,9 @@ function normalize(obj){
     laenge:obj['Länge/Maße in m']!=null?String(obj['Länge/Maße in m']):'',
     ortsteil:obj.Ortsteil||obj.ortsteil||'',
     stadt:obj.Stadt||obj.stadt||'Berlin',
-    bezirk:bezirk==='#NV'?'':bezirk
+    bezirk:bezirk==='#NV'?'':bezirk,
+    kategorie:kat,
+    geschlecht:gesch==='—'?'':gesch
   };
 }
 function loadData(raw){
@@ -1080,7 +1088,7 @@ function startTypewriter(){
 const FACT_TEMPLATES=[
   s=>`Die <strong>${escHtml(s.name)}</strong> wurde am <strong>${escHtml(s.datum||'?')}</strong> benannt.`,
   s=>`<strong>${escHtml(s.name)}</strong>: ${escHtml((s.herkunft||'').substring(0,90))}${s.herkunft&&s.herkunft.length>90?'…':''}`,
-  s=>`Es gibt <strong>${streets.filter(x=>getType(x.name)==='Platz').length}</strong> Plätze und <strong>${streets.filter(x=>getType(x.name)==='Straße').length}</strong> Straßen in der Datenbank.`,
+  s=>`<strong>${streets.filter(x=>x.kategorie==='Person').length}</strong> Straßen sind nach Personen benannt — davon <strong>${streets.filter(x=>x.geschlecht==='W').length}</strong> nach Frauen.`,
   s=>{const y=getDatumYear(s.datum);return y?`<strong>${escHtml(s.name)}</strong> wurde im Jahr <strong>${y}</strong> benannt — vor <strong>${new Date().getFullYear()-y}</strong> Jahren.`:`Die Datenbank enthält <strong>${streets.length}</strong> Einträge aus <strong>${bezirke.length}</strong> Berliner Bezirken.`;}
 ];
 function renderFacts(){
@@ -1121,7 +1129,7 @@ document.getElementById('quickCats')?.addEventListener('click',e=>{
   const qcat=e.target.closest('[data-qcat]');if(!qcat)return;
   let result=[];
   const type=qcat.dataset.qcat;
-  if(type==='personen')result=streets.filter(s=>/\d{4}[–—-]\d{4}/.test(s.herkunft));
+  if(type==='personen')result=streets.filter(s=>s.kategorie==='Person');
   else if(type==='historisch')result=streets.filter(s=>{const y=getDatumYear(s.datum);return y&&y<1900;});
   else if(type==='laengste')result=[...streets].filter(s=>s.laenge&&!s.laenge.includes('×')).sort((a,b)=>parseFloat(b.laenge)-parseFloat(a.laenge)).slice(0,50);
   else if(type==='neueste')result=[...streets].filter(s=>getDatumYear(s.datum)).sort((a,b)=>getDatumYear(b.datum)-getDatumYear(a.datum)).slice(0,50);
@@ -1433,27 +1441,74 @@ function renderStats(){
       </div>`).join('')}</div>`;
   grid.appendChild(bzCard);
 
-  // Feature 9: Donut — persons vs others
-  const personCount=streets.filter(s=>/\d{4}[–—-]\d{4}/.test(s.herkunft)).length;
+  // ── Kategorien-Verteilung (aus JSON-Feld) ──
+  const KAT_META={
+    'Person':           {emoji:'👤',color:'#2d4a3e'},
+    'Geographie':       {emoji:'🌍',color:'#2980b9'},
+    'Ort':              {emoji:'📍',color:'#1a5276'},
+    'Gewässer':         {emoji:'🌊',color:'#1a6e8a'},
+    'Natur':            {emoji:'🌿',color:'#27ae60'},
+    'Lage/Beschreibung':{emoji:'🗺️',color:'#7f8c8d'},
+    'Gebäude/Bauwerk':  {emoji:'🏛️',color:'#c9a96e'},
+    'Geschichte':       {emoji:'⚔️',color:'#922b21'},
+    'Sage/Mythos/Kultur':{emoji:'✨',color:'#7d3c98'},
+    'Berg/Gebirge':     {emoji:'⛰️',color:'#6e6e3a'},
+    'Beruf/Gewerbe':    {emoji:'⚒️',color:'#d35400'},
+    'Religion':         {emoji:'⛪',color:'#6c3483'},
+    'Militär':          {emoji:'🎖️',color:'#78281f'},
+    'Freizeit/Gastronomie':{emoji:'🍺',color:'#1a8a2a'},
+    'Sonstiges':        {emoji:'❓',color:'#999'},
+  };
+  const katMap={};
+  streets.forEach(s=>{const k=s.kategorie||'Sonstiges';katMap[k]=(katMap[k]||0)+1;});
+  const katEntries=Object.entries(katMap).sort((a,b)=>b[1]-a[1]);
+  const maxKat=katEntries[0]?.[1]||1;
+  let katHtml='<div style="font-weight:600;color:var(--text);font-size:13px;margin-bottom:14px">Kategorien der Namensherkunft</div><div class="stat-bar-wrap">';
+  katEntries.forEach(([k,v])=>{
+    const m=KAT_META[k]||{emoji:'•',color:'#999'};
+    katHtml+=`<div class="stat-bar-row">
+      <span class="stat-bar-label">${m.emoji} ${escHtml(k)}</span>
+      <div class="stat-bar-track"><div class="stat-bar-fill" style="width:${Math.round(v/maxKat*100)}%;background:${m.color}"></div></div>
+      <span class="stat-bar-val">${v}</span></div>`;
+  });
+  katHtml+='</div>';
+  const katCard=document.createElement('div');katCard.className='stat-card full';katCard.style.animationDelay='.42s';
+  katCard.innerHTML=katHtml;
+  grid.appendChild(katCard);
+
+  // ── Personen: M/W Aufschlüsselung ──
+  const personCount=streets.filter(s=>s.kategorie==='Person').length;
+  const frauenCount=streets.filter(s=>s.kategorie==='Person'&&s.geschlecht==='W').length;
+  const maennerCount=streets.filter(s=>s.kategorie==='Person'&&s.geschlecht==='M').length;
   const otherCount=total-personCount;
   const personPct=Math.round(personCount/total*100);
+  const frauenPct=personCount>0?Math.round(frauenCount/personCount*100):0;
   const r=36,circ=2*Math.PI*r;
   const personArc=circ*(personCount/total);
-  const donutCard=document.createElement('div');donutCard.className='stat-card full';donutCard.style.animationDelay='.42s';
-  donutCard.innerHTML=`<div style="font-weight:600;color:var(--text);font-size:13px;margin-bottom:4px">Nach Personen benannt</div>
-    <div class="donut-wrap">
+  const frauenArc=circ*(frauenCount/personCount||0);
+  const donutCard=document.createElement('div');donutCard.className='stat-card full';donutCard.style.animationDelay='.49s';
+  donutCard.innerHTML=`<div style="font-weight:600;color:var(--text);font-size:13px;margin-bottom:4px">Personen: Männer & Frauen</div>
+    <div class="donut-wrap" style="gap:24px">
       <svg class="donut-svg" width="90" height="90" viewBox="0 0 90 90">
         <circle cx="45" cy="45" r="${r}" fill="none" stroke="var(--card2)" stroke-width="10"/>
         <circle cx="45" cy="45" r="${r}" fill="none" stroke="var(--accent)" stroke-width="10"
           stroke-dasharray="${personArc.toFixed(1)} ${circ.toFixed(1)}"
-          stroke-dashoffset="${(circ/4).toFixed(1)}" stroke-linecap="round"
-          style="transition:stroke-dasharray .8s cubic-bezier(.4,0,.2,1)"/>
+          stroke-dashoffset="${(circ/4).toFixed(1)}" stroke-linecap="round"/>
         <text x="45" y="41" text-anchor="middle" font-family="var(--serif)" font-size="16" fill="var(--accent)">${personPct}%</text>
         <text x="45" y="54" text-anchor="middle" font-family="var(--sans)" font-size="8" fill="var(--muted)">Personen</text>
       </svg>
+      <svg class="donut-svg" width="90" height="90" viewBox="0 0 90 90">
+        <circle cx="45" cy="45" r="${r}" fill="none" stroke="#f8c8d8" stroke-width="10"/>
+        <circle cx="45" cy="45" r="${r}" fill="none" stroke="#c2185b" stroke-width="10"
+          stroke-dasharray="${frauenArc.toFixed(1)} ${circ.toFixed(1)}"
+          stroke-dashoffset="${(circ/4).toFixed(1)}" stroke-linecap="round"/>
+        <text x="45" y="41" text-anchor="middle" font-family="var(--serif)" font-size="16" fill="#c2185b">${frauenPct}%</text>
+        <text x="45" y="54" text-anchor="middle" font-family="var(--sans)" font-size="8" fill="var(--muted)">Frauen</text>
+      </svg>
       <div class="donut-legend">
-        <div class="donut-legend-item"><div class="donut-legend-dot" style="background:var(--accent)"></div><span class="donut-legend-label">Nach Personen</span><span class="donut-legend-val">${personCount}</span></div>
-        <div class="donut-legend-item"><div class="donut-legend-dot" style="background:var(--card2);border:1px solid var(--line)"></div><span class="donut-legend-label">Andere Herkunft</span><span class="donut-legend-val">${otherCount}</span></div>
+        <div class="donut-legend-item"><div class="donut-legend-dot" style="background:var(--accent)"></div><span class="donut-legend-label">Personen</span><span class="donut-legend-val">${personCount}</span></div>
+        <div class="donut-legend-item"><div class="donut-legend-dot" style="background:#c2185b"></div><span class="donut-legend-label">davon Frauen</span><span class="donut-legend-val">${frauenCount}</span></div>
+        <div class="donut-legend-item"><div class="donut-legend-dot" style="background:#1565c0"></div><span class="donut-legend-label">davon Männer</span><span class="donut-legend-val">${maennerCount}</span></div>
       </div>
     </div>`;
   grid.appendChild(donutCard);
@@ -1476,26 +1531,8 @@ function renderStats(){
   bzProgCard.innerHTML=bzProgHtml;
   grid.appendChild(bzProgCard);
 
-  // ── Namens-Herkunft Kategorien ──
-  const hCats=[
-    {label:'Personen',emoji:'👤',color:'#2d4a3e',fn:s=>/\d{4}[–—\-]\d{4}/.test(s.herkunft)},
-    {label:'Berufe',emoji:'⚒️',color:'#2980b9',fn:s=>/meister|handwerk|bäcker|schmied|schneider|fischer|maler|zimmermann|kaufmann/i.test(s.herkunft)},
-    {label:'Natur',emoji:'🌿',color:'#27ae60',fn:s=>/baum|wald|wiese|fluss|berg|tal|see|feld|garten|heide/i.test(s.herkunft)},
-    {label:'Orte',emoji:'📍',color:'#8e44ad',fn:s=>/dorf|stadt|burg|felde|stedt|hausen|heim/i.test(s.herkunft)},
-    {label:'Geschichte',emoji:'🏛',color:'#d35400',fn:s=>/krieg|schlacht|kaiser|könig|preußen|revolution|republik/i.test(s.herkunft)},
-  ];
-  const hData=hCats.map(c=>({...c,count:streets.filter(s=>s.herkunft&&c.fn(s)).length})).filter(c=>c.count>0).sort((a,b)=>b.count-a.count);
-  const maxH=Math.max(...hData.map(c=>c.count));
-  let hHtml='<div style="font-weight:600;color:var(--text);font-size:13px;margin-bottom:14px">Namens-Herkunft Kategorien</div><div class="stat-bar-wrap">';
-  hData.forEach(c=>{
-    hHtml+='<div class="stat-bar-row"><span class="stat-bar-label">'+c.emoji+' '+escHtml(c.label)+'</span>';
-    hHtml+='<div class="stat-bar-track"><div class="stat-bar-fill" style="width:'+Math.round(c.count/maxH*100)+'%;background:'+c.color+'"></div></div>';
-    hHtml+='<span class="stat-bar-val">'+c.count+'</span></div>';
-  });
-  hHtml+='</div>';
-  const hCard=document.createElement('div');hCard.className='stat-card full';hCard.style.animationDelay='.56s';
-  hCard.innerHTML=hHtml;
-  grid.appendChild(hCard);
+  // ── Namens-Herkunft Kategorien: quickCats nun auch nach Kategorie filterbar ──
+  // (Karte wurde durch die Kategorien-Verteilung oben ersetzt — kein Duplikat)
 
   // ── Jahrhunderte-Verteilung ──
   const centMap={};
@@ -1572,6 +1609,19 @@ function openDetail(item){
   $('sheetBezirk').textContent=[item.bezirk,item.ortsteil].filter(Boolean).join(' · ')||'';
   if(item.ortsteil){$('sheetOrtsteil').textContent=item.ortsteil;$('sheetOrtsteilRow').style.display='';}
   else $('sheetOrtsteilRow').style.display='none';
+  // Kategorie-Badge im Sheet
+  const katEl=$('sheetKategorie');
+  if(katEl){
+    const katMeta={'Person':'👤','Geographie':'🌍','Ort':'📍','Gewässer':'🌊','Natur':'🌿',
+      'Lage/Beschreibung':'🗺️','Gebäude/Bauwerk':'🏛️','Geschichte':'⚔️',
+      'Sage/Mythos/Kultur':'✨','Berg/Gebirge':'⛰️','Beruf/Gewerbe':'⚒️',
+      'Religion':'⛪','Militär':'🎖️','Freizeit/Gastronomie':'🍺','Sonstiges':'❓'};
+    const k=item.kategorie||'';
+    const g=item.geschlecht;
+    const gLabel=g==='W'?' · ♀':g==='M'?' · ♂':'';
+    katEl.style.display=k?'':'none';
+    katEl.textContent=(katMeta[k]||'•')+' '+k+gLabel;
+  }
   $('sheetHerkunft').textContent=item.herkunft||'—';$('sheetHerkunft').className='sheet-row-val'+(item.herkunft?'':' empty');
   $('sheetDatum').textContent=item.datum||'Unbekannt';$('sheetDatum').className='sheet-row-val'+(item.datum?'':' empty');
   if(item.laenge){$('sheetLaenge').textContent=item.laenge+' m';$('sheetLaengeRow').style.display='';}else $('sheetLaengeRow').style.display='none';
@@ -1729,9 +1779,9 @@ function getChallenges(){
     {id:'c14',emoji:'✨',title:'Neue Straßen'+scopeLabel,desc:`10 Straßen nach 2010${scopeLabel}`,diff:'easy',
      fn:()=>scope.filter(s=>{const y=getDatumYear(s.datum);return y&&y>2010;}),target:10},
     {id:'c15',emoji:'👤',title:'Namenspaten'+scopeLabel,desc:`25 nach Personen benannte Straßen${scopeLabel}`,diff:'medium',
-     fn:()=>scope.filter(s=>/\d{4}[–—\-]\d{4}/.test(s.herkunft||'')),target:25},
+     fn:()=>scope.filter(s=>s.kategorie==='Person'),target:25},
     {id:'c16',emoji:'👩',title:'Frauen in der Geschichte'+scopeLabel,desc:`10 nach Frauen benannte Straßen${scopeLabel}`,diff:'easy',
-     fn:()=>scope.filter(s=>/\b(Maria|Anna|Clara|Louise|Sophie|Elisabeth|Henriette|Rosa|Emma|Käthe|Helene|Paula|Martha|Luise|Inge)\b/.test(s.herkunft||'')),target:10},
+     fn:()=>scope.filter(s=>s.kategorie==='Person'&&s.geschlecht==='W'),target:10},
     {id:'c17',emoji:'📏',title:'Lange Wege'+scopeLabel,desc:`10 Straßen über 1000m${scopeLabel}`,diff:'medium',
      fn:()=>scope.filter(s=>{try{return parseFloat(s.laenge)>=1000;}catch{return false;}}),target:10},
     {id:'c18',emoji:'📌',title:'Kleine Gassen'+scopeLabel,desc:`5 Straßen unter 100m${scopeLabel}`,diff:'easy',
