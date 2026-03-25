@@ -1684,61 +1684,74 @@ async function loadMap(item){
 
 /* ── Challenges ── */
 function getChallenges(){
-  // Each challenge: id, emoji, title, desc, difficulty, filter fn → matching streets
-  return [
-    // Bezirk-Challenges
-    {id:'c01',emoji:'🗺️',title:'Kreuzberg komplett',desc:'Erkunde alle Straßen in Kreuzberg',diff:'hard',
-     fn:()=>streets.filter(s=>s.bezirk==='Friedrichshain-Kreuzberg')},
-    {id:'c02',emoji:'🏙️',title:'Mitte entdecken',desc:'Erkunde alle Straßen in Mitte',diff:'hard',
-     fn:()=>streets.filter(s=>s.bezirk==='Mitte')},
-    {id:'c03',emoji:'🌳',title:'Prenzlauer Berg',desc:'Erkunde alle Straßen in Prenzlauer Berg',diff:'hard',
-     fn:()=>streets.filter(s=>s.bezirk==='Pankow')},
-    {id:'c04',emoji:'🎭',title:'Friedrichshain erkunden',desc:'Erkunde alle Straßen in Friedrichshain',diff:'hard',
-     fn:()=>streets.filter(s=>s.bezirk==='Friedrichshain-Kreuzberg')},
-    {id:'c05',emoji:'🏰',title:'Alt Treptow Starter',desc:'Erkunde alle Straßen in Treptow-Köpenick',diff:'easy',
-     fn:()=>streets.filter(s=>s.bezirk==='Treptow-Köpenick')},
-    {id:'c06',emoji:'⚙️',title:'Siemensstadt meistern',desc:'Erkunde alle Straßen in Spandau',diff:'easy',
-     fn:()=>streets.filter(s=>s.bezirk==='Spandau')},
-    // Typ-Challenges
-    {id:'c07',emoji:'⛲',title:'Platz-Sammler: Kreuzberg',desc:'Erkunde alle Plätze in Kreuzberg',diff:'easy',
-     fn:()=>streets.filter(s=>s.bezirk==='Friedrichshain-Kreuzberg'&&getType(s.name)==='Platz')},
-    {id:'c08',emoji:'⛲',title:'Platz-Sammler: Mitte',desc:'Erkunde alle Plätze in Mitte',diff:'medium',
-     fn:()=>streets.filter(s=>s.bezirk==='Mitte'&&getType(s.name)==='Platz')},
-    {id:'c09',emoji:'🌲',title:'Alle Wege in Lichterfelde',desc:'Erkunde alle Wege & Pfade in Lichterfelde',diff:'medium',
-     fn:()=>streets.filter(s=>s.bezirk==='Steglitz-Zehlendorf'&&getType(s.name)==='Weg')},
-    {id:'c10',emoji:'🛤️',title:'Alleen-Sammler',desc:'Erkunde alle 47 Alleen in der Datenbank',diff:'medium',
-     fn:()=>streets.filter(s=>s.name.toLowerCase().includes('allee'))},
-    // Historische Challenges
-    {id:'c11',emoji:'📜',title:'Vor 1800 benannt',desc:'Erkunde 10 Straßen die vor 1800 benannt wurden',diff:'medium',
-     fn:()=>streets.filter(s=>{const y=getDatumYear(s.datum);return y&&y<1800;}),target:10},
-    {id:'c12',emoji:'🏛️',title:'Kaiserreich-Straßen',desc:'Erkunde 20 Straßen aus dem Kaiserreich (1871–1918)',diff:'medium',
-     fn:()=>streets.filter(s=>{const y=getDatumYear(s.datum);return y&&y>=1871&&y<=1918;}),target:20},
-    {id:'c13',emoji:'🕰️',title:'Ältester Kiez',desc:'Erkunde 15 Straßen die vor 1850 benannt wurden',diff:'medium',
-     fn:()=>streets.filter(s=>{const y=getDatumYear(s.datum);return y&&y<1850;}),target:15},
-    {id:'c14',emoji:'✨',title:'Neue Straßen',desc:'Erkunde 10 Straßen die nach 2010 benannt wurden',diff:'easy',
-     fn:()=>streets.filter(s=>{const y=getDatumYear(s.datum);return y&&y>2010;}),target:10},
-    // Personen-Challenges
-    {id:'c15',emoji:'👤',title:'Namenspaten',desc:'Erkunde 25 nach Personen benannte Straßen',diff:'medium',
-     fn:()=>streets.filter(s=>/\d{4}[–—\-]\d{4}/.test(s.herkunft||'')),target:25},
-    {id:'c16',emoji:'👩',title:'Frauen in der Geschichte',desc:'Erkunde 10 nach Frauen benannte Straßen',diff:'easy',
-     fn:()=>streets.filter(s=>/\b(Maria|Anna|Clara|Louise|Sophie|Elisabeth|Henriette|Rosa|Emma|Käthe|Helene|Paula|Martha|Luise|Inge)\b/.test(s.herkunft||'')),target:10},
-    // Längen-Challenges
-    {id:'c17',emoji:'📏',title:'Lange Wege',desc:'Erkunde 10 Straßen die länger als 1000m sind',diff:'medium',
-     fn:()=>streets.filter(s=>{try{return parseFloat(s.laenge)>=1000;}catch{return false;}}),target:10},
-    {id:'c18',emoji:'📌',title:'Kleine Gassen',desc:'Erkunde 5 Straßen die kürzer als 100m sind',diff:'easy',
-     fn:()=>streets.filter(s=>{try{const l=parseFloat(s.laenge);return l>0&&l<100;}catch{return false;}}),target:5},
-    // Quer-Bezirk
-    {id:'c19',emoji:'🗺️',title:'Berliner Weltreisender',desc:'Erkunde mindestens eine Straße in jedem Bezirk',diff:'hard',
-     fn:()=>streets,customCheck:()=>{
-       const exploredBezirke=new Set(streets.filter(s=>explored.has(s.name)).map(s=>s.bezirk).filter(Boolean));
-       return{done:bezirke.every(b=>exploredBezirke.has(b)),current:exploredBezirke.size,total:bezirke.length};
-     }},
-    {id:'c20',emoji:'🏆',title:'100 Straßen',desc:'Erkunde insgesamt 100 Straßen in ganz Berlin',diff:'hard',
-     fn:()=>streets,target:100,customCheck:()=>{
-       const c=streets.filter(s=>explored.has(s.name)).length;
-       return{done:c>=100,current:Math.min(c,100),total:100};
-     }},
+  const b=meinBezirk; // aktuell gewählter Bezirk (kann leer sein)
+
+  // Bezirk-spezifische Challenges: wenn Bezirk gewählt nur für diesen, sonst für alle
+  const bezirkChallenges=b
+    ? [
+        {id:'cb1',emoji:'🗺️',title:`${b} komplett`,desc:`Erkunde alle Straßen in ${b}`,diff:'hard',
+         fn:()=>streets.filter(s=>s.bezirk===b)},
+        {id:'cb2',emoji:'⛲',title:`Plätze in ${b}`,desc:`Erkunde alle Plätze in ${b}`,diff:'medium',
+         fn:()=>streets.filter(s=>s.bezirk===b&&getType(s.name)==='Platz')},
+        {id:'cb3',emoji:'🌲',title:`Wege in ${b}`,desc:`Erkunde alle Wege & Pfade in ${b}`,diff:'easy',
+         fn:()=>streets.filter(s=>s.bezirk===b&&getType(s.name)==='Weg')},
+        {id:'cb4',emoji:'📏',title:`Lange Straßen in ${b}`,desc:`Erkunde 5 Straßen über 1000m in ${b}`,diff:'medium',
+         fn:()=>streets.filter(s=>s.bezirk===b&&parseFloat(s.laenge)>=1000),target:5},
+        {id:'cb5',emoji:'✨',title:`Neue Straßen in ${b}`,desc:`Erkunde 5 Straßen nach 2000 in ${b}`,diff:'easy',
+         fn:()=>streets.filter(s=>s.bezirk===b&&getDatumYear(s.datum)>2000),target:5},
+        {id:'cb6',emoji:'📜',title:`Historisch in ${b}`,desc:`Erkunde 5 Straßen vor 1900 in ${b}`,diff:'medium',
+         fn:()=>streets.filter(s=>s.bezirk===b&&(getDatumYear(s.datum)||9999)<1900),target:5},
+      ]
+    : [
+        {id:'c01',emoji:'🗺️',title:'Kreuzberg komplett',desc:'Erkunde alle Straßen in Kreuzberg',diff:'hard',
+         fn:()=>streets.filter(s=>s.bezirk==='Friedrichshain-Kreuzberg')},
+        {id:'c02',emoji:'🏙️',title:'Mitte entdecken',desc:'Erkunde alle Straßen in Mitte',diff:'hard',
+         fn:()=>streets.filter(s=>s.bezirk==='Mitte')},
+        {id:'c03',emoji:'🌳',title:'Prenzlauer Berg',desc:'Erkunde alle Straßen in Pankow',diff:'hard',
+         fn:()=>streets.filter(s=>s.bezirk==='Pankow')},
+        {id:'c07',emoji:'⛲',title:'Platz-Sammler: Kreuzberg',desc:'Erkunde alle Plätze in Kreuzberg',diff:'easy',
+         fn:()=>streets.filter(s=>s.bezirk==='Friedrichshain-Kreuzberg'&&getType(s.name)==='Platz')},
+        {id:'c08',emoji:'⛲',title:'Platz-Sammler: Mitte',desc:'Erkunde alle Plätze in Mitte',diff:'medium',
+         fn:()=>streets.filter(s=>s.bezirk==='Mitte'&&getType(s.name)==='Platz')},
+      ];
+
+  // Übergreifende Challenges — immer sichtbar, aber wenn Bezirk gewählt auf diesen eingegrenzt
+  const scope=b?streets.filter(s=>s.bezirk===b):streets;
+  const scopeLabel=b?` in ${b}`:'';
+
+  const globalChallenges=[
+    {id:'c10',emoji:'🛤️',title:'Alleen-Sammler'+scopeLabel,desc:`Erkunde Alleen${scopeLabel}`,diff:'medium',
+     fn:()=>scope.filter(s=>s.name.toLowerCase().includes('allee'))},
+    {id:'c11',emoji:'📜',title:'Vor 1800 benannt'+scopeLabel,desc:`Erkunde 10 Straßen vor 1800${scopeLabel}`,diff:'medium',
+     fn:()=>scope.filter(s=>{const y=getDatumYear(s.datum);return y&&y<1800;}),target:10},
+    {id:'c12',emoji:'🏛️',title:'Kaiserreich-Straßen'+scopeLabel,desc:`20 Straßen 1871–1918${scopeLabel}`,diff:'medium',
+     fn:()=>scope.filter(s=>{const y=getDatumYear(s.datum);return y&&y>=1871&&y<=1918;}),target:20},
+    {id:'c14',emoji:'✨',title:'Neue Straßen'+scopeLabel,desc:`10 Straßen nach 2010${scopeLabel}`,diff:'easy',
+     fn:()=>scope.filter(s=>{const y=getDatumYear(s.datum);return y&&y>2010;}),target:10},
+    {id:'c15',emoji:'👤',title:'Namenspaten'+scopeLabel,desc:`25 nach Personen benannte Straßen${scopeLabel}`,diff:'medium',
+     fn:()=>scope.filter(s=>/\d{4}[–—\-]\d{4}/.test(s.herkunft||'')),target:25},
+    {id:'c16',emoji:'👩',title:'Frauen in der Geschichte'+scopeLabel,desc:`10 nach Frauen benannte Straßen${scopeLabel}`,diff:'easy',
+     fn:()=>scope.filter(s=>/\b(Maria|Anna|Clara|Louise|Sophie|Elisabeth|Henriette|Rosa|Emma|Käthe|Helene|Paula|Martha|Luise|Inge)\b/.test(s.herkunft||'')),target:10},
+    {id:'c17',emoji:'📏',title:'Lange Wege'+scopeLabel,desc:`10 Straßen über 1000m${scopeLabel}`,diff:'medium',
+     fn:()=>scope.filter(s=>{try{return parseFloat(s.laenge)>=1000;}catch{return false;}}),target:10},
+    {id:'c18',emoji:'📌',title:'Kleine Gassen'+scopeLabel,desc:`5 Straßen unter 100m${scopeLabel}`,diff:'easy',
+     fn:()=>scope.filter(s=>{try{const l=parseFloat(s.laenge);return l>0&&l<100;}catch{return false;}}),target:5},
+    // Nur ohne Bezirk-Filter sinnvoll
+    ...(!b?[
+      {id:'c19',emoji:'🗺️',title:'Berliner Weltreisender',desc:'Mindestens eine Straße in jedem Bezirk',diff:'hard',
+       fn:()=>streets,customCheck:()=>{
+         const exploredBezirke=new Set(streets.filter(s=>explored.has(s.name)).map(s=>s.bezirk).filter(Boolean));
+         return{done:bezirke.every(bz=>exploredBezirke.has(bz)),current:exploredBezirke.size,total:bezirke.length};
+       }},
+      {id:'c20',emoji:'🏆',title:'100 Straßen',desc:'Erkunde insgesamt 100 Straßen in Berlin',diff:'hard',
+       fn:()=>streets,target:100,customCheck:()=>{
+         const c=streets.filter(s=>explored.has(s.name)).length;
+         return{done:c>=100,current:Math.min(c,100),total:100};
+       }},
+    ]:[]),
   ];
+
+  return [...bezirkChallenges,...globalChallenges];
 }
 
 function renderChallenges(){
@@ -1748,81 +1761,24 @@ function renderChallenges(){
     return;
   }
   grid.innerHTML='';
-  let challenges=getChallenges();
-  const completed=challenges.filter(c=>calcChallenge(c).done).length;
-  $('challengeSubText').textContent=completed+' / '+challenges.length+' abgeschlossen';
+  const challenges=getChallenges();
 
-  // Wenn Bezirk gewählt: Bezirks-Challenges zuerst, Rest danach mit Trennlinie
-  if(meinBezirk){
-    const shortBezirk=meinBezirk;
-    const mine=challenges.filter(c=>c.desc&&c.desc.includes(shortBezirk)||c.title&&c.title.includes(shortBezirk));
-    const rest=challenges.filter(c=>!mine.includes(c));
-    if(mine.length){
-      const lbl=document.createElement('div');
-      lbl.style.cssText='font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);padding:4px 2px 8px;';
-      lbl.textContent='Mein Bezirk · '+shortBezirk;
-      grid.appendChild(lbl);
-      mine.forEach(ch=>appendChallengeCard(grid,ch));
-      const div=document.createElement('div');
-      div.style.cssText='font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:16px 2px 8px;border-top:1px solid var(--line);margin-top:4px;';
-      div.textContent='Alle Challenges';
-      grid.appendChild(div);
-      rest.forEach(ch=>appendChallengeCard(grid,ch));
-      attachChallengeListeners(grid,challenges);
-      return;
-    }
+  // Leere Challenges (0 passende Straßen) ausblenden
+  const visible=challenges.filter(ch=>{
+    const {total}=calcChallenge(ch);
+    return total>0;
+  });
+
+  const completed=visible.filter(c=>calcChallenge(c).done).length;
+  $('challengeSubText').textContent=completed+' / '+visible.length+' abgeschlossen';
+
+  if(!visible.length){
+    grid.innerHTML='<div class="notice" style="margin:0 0 16px"><strong>Keine Challenges</strong><p>Für diesen Bezirk gibt es noch keine passenden Einträge.</p></div>';
+    return;
   }
 
-  challenges.forEach(ch=>{
-    const {done,current,total}=calcChallenge(ch);
-    const pct=total>0?Math.min(100,Math.round(current/total*100)):0;
-    const card=document.createElement('div');
-    card.className='challenge-card'+(done?' done':'');
-
-    let progressHtml='';
-    if(done){
-      progressHtml='<div class="challenge-done-badge"><svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="#22c55e" stroke-width="2"><path d="M2 7l4 4 6-6"/></svg> Abgeschlossen!</div>';
-    } else {
-      progressHtml='<div class="challenge-bar-wrap">'
-        +'<div class="challenge-bar-track"><div class="challenge-bar-fill" style="width:'+pct+'%"></div></div>'
-        +'<span class="challenge-count">'+current+' / '+total+'</span>'
-        +'</div>';
-      if(current>0){
-        progressHtml+='<button class="challenge-view-btn" data-chid="'+ch.id+'">Noch '+( total-current)+' fehlen → Liste anzeigen</button>';
-      } else {
-        progressHtml+='<button class="challenge-view-btn" data-chid="'+ch.id+'">Straßen anzeigen →</button>';
-      }
-    }
-
-    card.innerHTML='<div class="challenge-header">'
-      +'<span class="challenge-emoji">'+ch.emoji+'</span>'
-      +'<div class="challenge-info">'
-      +'<div class="challenge-title">'+escHtml(ch.title)+'</div>'
-      +'<div class="challenge-desc">'+escHtml(ch.desc)+'</div>'
-      +'</div>'
-      +'<span class="challenge-badge '+ch.diff+'">'+(ch.diff==='easy'?'Leicht':ch.diff==='medium'?'Mittel':'Schwer')+'</span>'
-      +'</div>'
-      +'<div class="challenge-progress">'+progressHtml+'</div>';
-
-    grid.appendChild(card);
-  });
-
-  // View button → open list
-  grid.querySelectorAll('.challenge-view-btn').forEach(btn=>{
-    btn.addEventListener('click',e=>{
-      e.stopPropagation();
-      const ch=challenges.find(c=>c.id===btn.dataset.chid);
-      if(!ch)return;
-      const list=ch.fn().filter(s=>!explored.has(s.name));
-      document.querySelector('[data-nav="suche"]').click();
-      currentQuery='';
-      $('searchInput').value='';
-      $('searchUI').classList.remove('hidden');
-      $('countText').innerHTML='<strong>'+list.length+'</strong> verbleibende Straßen für „'+escHtml(ch.title)+'"';
-      renderList($('listContainer'),list,'',false);
-      $('searchUI').scrollIntoView({behavior:'smooth',block:'start'});
-    });
-  });
+  visible.forEach(ch=>appendChallengeCard(grid,ch));
+  attachChallengeListeners(grid,visible);
 }
 
 function calcChallenge(ch){
