@@ -316,7 +316,8 @@ html,body{height:100%;font-family:var(--sans);background:var(--bg);color:var(--t
 
 /* ── Auth Screen ── */
 .auth-screen{position:fixed;inset:0;background:var(--accent);z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px}
-.auth-screen.hidden{display:none}
+/* FIX: pointer-events blockieren, sonst frisst der Screen alle Klicks nach Login */
+.auth-screen.hidden{display:none!important;pointer-events:none!important}
 .auth-logo{font-family:var(--serif);font-size:42px;color:#fff;margin-bottom:6px;letter-spacing:-.01em}
 .auth-sub{font-size:13px;color:rgba(255,255,255,.6);margin-bottom:40px;letter-spacing:.04em;text-transform:uppercase}
 .auth-card{background:#fff;border-radius:18px;padding:28px 24px;width:100%;max-width:360px;box-shadow:0 20px 60px rgba(0,0,0,.2)}
@@ -758,6 +759,10 @@ let syncTimer=null;
 
 const CFG={AC_LIMIT:5,DEBOUNCE_MS:180,STORAGE_KEY:'ks_favs',HISTORY_KEY:'ks_history',RECENT_KEY:'ks_recent',EXPLORED_KEY:'ks_explored',STREAK_KEY:'ks_streak'};
 
+/* Bezirk-Tile Farben/Icons — müssen vor buildBezirkeTiles definiert sein */
+const TILE_COLORS=['#2d4a3e','#2980b9','#27ae60','#8e44ad','#d35400','#16a085','#c0762b','#2b5580'];
+const TILE_ICONS=['🏛','🏙','🌳','🎭','🏰','🌊','🎨','🔬'];
+
 let streets=[],bezirke=[];
 let favorites=new Set(JSON.parse(localStorage.getItem(CFG.STORAGE_KEY)||'[]'));
 let explored=new Set(JSON.parse(localStorage.getItem(CFG.EXPLORED_KEY)||'[]'));
@@ -822,7 +827,9 @@ $('logoutBtn').addEventListener('click',async()=>{
   currentUser=null;
   favorites=new Set();explored=new Set();meinBezirk='';
   $('userBar').style.display='none';
-  $('authScreen').classList.remove('hidden');
+  const as=$('authScreen');
+  as.classList.remove('hidden');
+  as.style.pointerEvents='';
   $('authEmail').value='';$('authPassword').value='';
   $('authError').classList.remove('show');
   $('authSuccess').classList.remove('show');
@@ -890,13 +897,18 @@ supa.auth.onAuthStateChange(async(event,session)=>{
     const email=session.user.email;
     $('userEmail').textContent=email.split('@')[0];
     $('userBar').style.display='flex';
-    $('authScreen').classList.add('hidden');
+    // FIX: hidden + pointer-events:none — verhindert dass der Auth-Screen
+    // nach dem Login unsichtbar aber klick-blockierend über der App liegt
+    const as=$('authScreen');
+    as.classList.add('hidden');
+    as.style.pointerEvents='none';
     await loadUserData(session.user.id);
-    // Re-render falls Daten jetzt anders
     renderAllLists();
     if($('page-fortschritt').classList.contains('active'))renderFortschritt();
   } else {
-    $('authScreen').classList.remove('hidden');
+    const as=$('authScreen');
+    as.classList.remove('hidden');
+    as.style.pointerEvents='';
     $('userBar').style.display='none';
   }
 });
@@ -1105,7 +1117,7 @@ function renderDiscoverToday(){
 /* Feature 4: Quick cats with counts */
 function renderQuickCats(){/* Quick cats entfernt */}
 
-document.getElementById('quickCats').addEventListener('click',e=>{
+document.getElementById('quickCats')?.addEventListener('click',e=>{
   const qcat=e.target.closest('[data-qcat]');if(!qcat)return;
   let result=[];
   const type=qcat.dataset.qcat;
@@ -1287,8 +1299,6 @@ function acNavigate(dir){
 function acConfirm(){const items=autocomplete.querySelectorAll('.ac-item');if(acIndex>=0&&items[acIndex])items[acIndex].dispatchEvent(new MouseEvent('mousedown'));else{hideAC();renderSearchList();}}
 
 /* ── Page 2: Bezirke ── */
-const TILE_COLORS=['#2d4a3e','#2980b9','#27ae60','#8e44ad','#d35400','#16a085','#c0762b','#2b5580'];
-const TILE_ICONS=['🏛','🏙','🌳','🎭','🏰','🌊','🎨','🔬'];
 function buildBezirkeTiles(){
   const grid=$('bezirkeGrid');grid.innerHTML='';
   bezirke.forEach((b,i)=>{
